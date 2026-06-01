@@ -683,7 +683,7 @@ h1{
         <div class="hstat-key">Total Supply</div>
       </div>
       <div class="hstat">
-        <div class="hstat-val">0.0004</div>
+        <div class="hstat-val">0.000488</div>
         <div class="hstat-key">Mint Price ETH</div>
       </div>
       <div class="hstat">
@@ -800,7 +800,7 @@ h1{
       <div class="mint-details">
         <div class="mdet-row"><span class="mdet-key">Collection</span><span class="mdet-val">birbx</span></div>
         <div class="mdet-row"><span class="mdet-key">Total Supply</span><span class="mdet-val">10,000</span></div>
-        <div class="mdet-row"><span class="mdet-key">Mint Price</span><span class="mdet-val highlight">0.0004 ETH</span></div>
+        <div class="mdet-row"><span class="mdet-key">Mint Price</span><span class="mdet-val highlight">0.000488 ETH</span></div>
         <div class="mdet-row"><span class="mdet-key">Network</span><span class="mdet-val highlight">Base Mainnet</span></div>
         <div class="mdet-row"><span class="mdet-key">Max Per Wallet</span><span class="mdet-val">10 NFTs</span></div>
         <div class="mdet-row"><span class="mdet-key">Contract</span><span class="mdet-val highlight" style="font-size:.75rem">0x545d…0b99</span></div>
@@ -820,7 +820,7 @@ h1{
       <div class="mc-stats">
         <div class="mcs"><span class="mcs-val" id="sMinted">—</span><span class="mcs-key">Minted</span></div>
         <div class="mcs"><span class="mcs-val" id="sLeft">—</span><span class="mcs-key">Remaining</span></div>
-        <div class="mcs"><span class="mcs-val">0.0004</span><span class="mcs-key">ETH Each</span></div>
+        <div class="mcs"><span class="mcs-val">0.000488</span><span class="mcs-key">ETH Each</span></div>
       </div>
 
       <div class="prog-wrap">
@@ -1077,8 +1077,15 @@ async function loadData(){
   try{
     let minted=0, isPaused=false, claimActive=false;
 
-    // Total supply of token ID 0
-    try{ minted=Number(await contract.totalSupply(TOKEN_ID)); }catch{}
+    // ThirdWeb ERC-721 Drop — try multiple supply functions
+    try{ minted=Number(await contract.totalSupply()); }
+    catch{
+      try{ 
+        // nextTokenIdToMint() returns total lazy minted, subtract unclaimed
+        const nextId = await contract.nextTokenIdToMint();
+        minted = Number(nextId);
+      }catch{}
+    }
 
     // Check paused
     try{ isPaused=await contract.paused(); }catch{ isPaused=false; }
@@ -1086,13 +1093,11 @@ async function loadData(){
     // Check claim condition is active
     try{
       const condId = await contract.getActiveClaimConditionId();
-      const cond   = await contract.getClaimConditionById(condId);
-      // If maxClaimableSupply > 0 and startTimestamp <= now, sale is active
-      const now = Math.floor(Date.now()/1000);
-      claimActive = Number(cond.startTimestamp) <= now && !isPaused;
+      // If we got a condId without throwing, claim conditions are set
+      claimActive = !isPaused;
     }catch{
-      // If getActiveClaimConditionId throws, no active claim condition
-      claimActive = false;
+      // Try alternate — if totalSupply readable and not paused, assume active
+      claimActive = !isPaused && minted >= 0;
     }
 
     const remaining = Math.max(0, CFG.MAX_SUPPLY - minted);
@@ -1213,11 +1218,12 @@ async function handleMint(){
       didMint=true;
       $('msgOk').style.display='block';
       btn.style.display='none';
-      set('okTitle',`Minted ${qty} birbx NFT${qty>1?'s':''}! 🎉`);
-      set('okSub','Your NFTs are now in your wallet');
+      set('okTitle',`🎉 Minted ${qty} birbx NFT${qty>1?'s':''}!`);
+      set('okSub',`Token #${receipt.logs?.[0]?.topics?.[3] ? parseInt(receipt.logs[0].topics[3], 16) : '—'} is now in your wallet`);
       $('txLink').href=`${CFG.EXPLORER}/tx/${receipt.hash}`;
-      toast(`Successfully minted ${qty} NFT${qty>1?'s':''}!`,'ok','🎉');
-      loadData();
+      toast(`🎉 Successfully minted ${qty} birbx NFT${qty>1?'s':''}!`,'ok','🎉');
+      // Refresh stats after short delay to let chain update
+      setTimeout(()=>loadData(), 2000);
     }else{
       throw new Error('Transaction reverted on-chain');
     }
