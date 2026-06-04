@@ -1962,29 +1962,53 @@ const $=id=>document.getElementById(id);
 const set=(id,v)=>{const e=$(id);if(e)e.textContent=v;};
 
 /* ── Chainlink Oracle ── */
+// Multiple RPC endpoints tried in order — first one that works wins
+const BASE_RPCS = [
+  'https://base.llamarpc.com',
+  'https://base-rpc.publicnode.com',
+  'https://base.drpc.org',
+  'https://mainnet.base.org',
+];
+
 async function fetchEthUsdPrice(prov){
+  // 1. Try Chainlink on-chain via each RPC
+  for(const rpc of BASE_RPCS){
+    try{
+      const readProv = prov || new ethers.JsonRpcProvider(rpc);
+      const feed = new ethers.Contract(CFG.CHAINLINK_FEED, CHAINLINK_ABI, readProv);
+      const [,answer,,updatedAt] = await feed.latestRoundData();
+
+      const age = Math.floor(Date.now()/1000) - Number(updatedAt);
+      if(age > 7200) continue; // stale, try next
+
+      ethUsdPrice = Number(answer); // 8 decimals
+      const priceUsd = ethUsdPrice / 1e8;
+      updatePriceDisplays(priceUsd);
+      return priceUsd;
+    }catch(e){
+      console.warn(`RPC ${rpc} failed:`, e.message);
+      continue;
+    }
+  }
+
+  // 2. All RPCs failed — fallback to CoinGecko free API (CORS-friendly)
   try{
-    // Use a read-only provider if signer provider not available yet
-    const readProv = prov || new ethers.JsonRpcProvider('https://mainnet.base.org');
-    const feed = new ethers.Contract(CFG.CHAINLINK_FEED, CHAINLINK_ABI, readProv);
-    const [,answer,,updatedAt] = await feed.latestRoundData();
-    const decimals = await feed.decimals(); // 8 for ETH/USD
+    const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd', {cache:'no-store'});
+    const data = await res.json();
+    const priceUsd = data?.ethereum?.usd;
+    if(!priceUsd) throw new Error('Bad CoinGecko response');
 
-    // Sanity check: data must be fresh (within 2 hours)
-    const age = Math.floor(Date.now()/1000) - Number(updatedAt);
-    if(age > 7200) throw new Error('Stale oracle data');
-
-    // answer has 8 decimals e.g. 340000000000 = $3400.00000000
-    ethUsdPrice = Number(answer); // raw integer with 8 decimals
-    const priceUsd = ethUsdPrice / 1e8;
-
+    // Store as 8-decimal integer to match Chainlink format
+    ethUsdPrice = Math.round(priceUsd * 1e8);
     updatePriceDisplays(priceUsd);
+    set('oraclePriceRate', '1 ETH = $' + priceUsd.toLocaleString(undefined,{maximumFractionDigits:2}) + ' (CoinGecko)');
     return priceUsd;
   }catch(e){
-    console.warn('Chainlink fetch failed:', e.message);
-    // Fallback: use last known or show loading
-    return null;
+    console.warn('CoinGecko fallback failed:', e.message);
   }
+
+  // 3. All sources failed
+  return null;
 }
 
 // Convert USD cents to wei using live ETH price
@@ -2239,7 +2263,7 @@ async function handleMint(){
 
   // Refresh oracle price right before mint so value is fresh
   toast('Fetching live ETH price…','','🔄');
-  const ethUsd = await fetchEthUsdPrice(provider);
+  const ethUsd = await fetchEthUsdPrice(provider || null);
   if(!ethUsd || !computedPrice){
     toast('Could not fetch ETH price — please try again','err','⚠');
     return;
@@ -2250,7 +2274,7 @@ async function handleMint(){
 
   try{
     // Re-fetch one more time for freshest price right at mint
-    const freshUsd = await fetchEthUsdPrice(provider);
+    const freshUsd = await fetchEthUsdPrice(provider || null);
     const value = computedPrice * BigInt(qty);
 
     btn.innerHTML='<span class="spin"></span><span>Confirm in wallet…</span>';
@@ -2536,22 +2560,27 @@ renderTierTabs();renderTierDetail();
 
 /* ── FETCH ORACLE ON LOAD (read-only, no wallet needed) ── */
 (async function initOraclePrice(){
+  set('priceEthDisplay', 'Fetching…');
+  set('oraclePriceRate', 'Chainlink oracle');
   try{
-    const readProv = new ethers.JsonRpcProvider('https://mainnet.base.org');
-    const priceUsd = await fetchEthUsdPrice(readProv);
+    const priceUsd = await fetchEthUsdPrice(null);
     if(priceUsd){
-      // Recompute for default Common tier
       computedPrice = usdCentsToWei(currentTierUSD);
       changeQty(0);
+    } else {
+      set('priceEthDisplay', 'Unavailable');
+      set('cTotal', 'Price unavailable');
     }
   }catch(e){ console.warn('Initial oracle fetch:', e); }
-  // Refresh price every 60 seconds silently
+
+  // Refresh silently every 60s
   setInterval(async()=>{
     try{
-      const readProv = new ethers.JsonRpcProvider('https://mainnet.base.org');
-      await fetchEthUsdPrice(readProv);
-      computedPrice = usdCentsToWei(currentTierUSD);
-      changeQty(0);
+      const priceUsd = await fetchEthUsdPrice(null);
+      if(priceUsd){
+        computedPrice = usdCentsToWei(currentTierUSD);
+        changeQty(0);
+      }
     }catch{}
   }, 60000);
 })();
