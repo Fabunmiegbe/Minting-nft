@@ -1938,12 +1938,6 @@ let computedPrice = null;
 const NATIVE_TOKEN = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 const EMPTY_PROOF = { proof:[], quantityLimitPerWallet:0, pricePerToken: ethers.MaxUint256, currency: NATIVE_TOKEN };
 
-// Chainlink AggregatorV3Interface — only need latestRoundData
-const CHAINLINK_ABI = [
-  "function latestRoundData() external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)",
-  "function decimals() external view returns (uint8)"
-];
-
 const ABI = [
   "function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken, (bytes32[] proof, uint256 quantityLimitPerWallet, uint256 pricePerToken, address currency) _allowlistProof, bytes _data) external payable",
   "function totalSupply() external view returns (uint256)",
@@ -1961,53 +1955,41 @@ let qty=1,minting=false,didMint=false;
 const $=id=>document.getElementById(id);
 const set=(id,v)=>{const e=$(id);if(e)e.textContent=v;};
 
-/* ── Chainlink Oracle ── */
-// Multiple RPC endpoints tried in order — first one that works wins
-const BASE_RPCS = [
-  'https://base.llamarpc.com',
-  'https://base-rpc.publicnode.com',
-  'https://base.drpc.org',
-  'https://mainnet.base.org',
+/* ── ETH/USD Price Fetcher (pure HTTP, no RPC, no CORS issues) ── */
+const PRICE_APIS = [
+  // CoinGecko
+  async () => {
+    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd', {cache:'no-store'});
+    const d = await r.json();
+    return d.ethereum.usd;
+  },
+  // Binance (very reliable, CORS open)
+  async () => {
+    const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT', {cache:'no-store'});
+    const d = await r.json();
+    return parseFloat(d.price);
+  },
+  // Coinbase
+  async () => {
+    const r = await fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot', {cache:'no-store'});
+    const d = await r.json();
+    return parseFloat(d.data.amount);
+  },
 ];
 
-async function fetchEthUsdPrice(prov){
-  // 1. Try Chainlink on-chain via each RPC
-  for(const rpc of BASE_RPCS){
+async function fetchEthUsdPrice(){
+  for(const apiFn of PRICE_APIS){
     try{
-      const readProv = prov || new ethers.JsonRpcProvider(rpc);
-      const feed = new ethers.Contract(CFG.CHAINLINK_FEED, CHAINLINK_ABI, readProv);
-      const [,answer,,updatedAt] = await feed.latestRoundData();
-
-      const age = Math.floor(Date.now()/1000) - Number(updatedAt);
-      if(age > 7200) continue; // stale, try next
-
-      ethUsdPrice = Number(answer); // 8 decimals
-      const priceUsd = ethUsdPrice / 1e8;
-      updatePriceDisplays(priceUsd);
-      return priceUsd;
+      const price = await apiFn();
+      if(!price || isNaN(price) || price < 100) continue; // sanity check
+      ethUsdPrice = Math.round(price * 1e8); // store as 8-decimal int
+      updatePriceDisplays(price);
+      return price;
     }catch(e){
-      console.warn(`RPC ${rpc} failed:`, e.message);
-      continue;
+      console.warn('Price API failed, trying next…', e.message);
     }
   }
-
-  // 2. All RPCs failed — fallback to CoinGecko free API (CORS-friendly)
-  try{
-    const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd', {cache:'no-store'});
-    const data = await res.json();
-    const priceUsd = data?.ethereum?.usd;
-    if(!priceUsd) throw new Error('Bad CoinGecko response');
-
-    // Store as 8-decimal integer to match Chainlink format
-    ethUsdPrice = Math.round(priceUsd * 1e8);
-    updatePriceDisplays(priceUsd);
-    set('oraclePriceRate', '1 ETH = $' + priceUsd.toLocaleString(undefined,{maximumFractionDigits:2}) + ' (CoinGecko)');
-    return priceUsd;
-  }catch(e){
-    console.warn('CoinGecko fallback failed:', e.message);
-  }
-
-  // 3. All sources failed
+  console.error('All price APIs failed');
   return null;
 }
 
@@ -2025,19 +2007,16 @@ function usdCentsToWei(cents){
 }
 
 function updatePriceDisplays(ethUsdDollars){
-  // Recompute ETH price for current tier
   const usdAmount = currentTierUSD / 100;
   const ethAmount = usdAmount / ethUsdDollars;
   computedPrice = usdCentsToWei(currentTierUSD);
 
   const ethStr = ethAmount.toFixed(6);
 
-  // Update all price displays
-  set('priceEthDisplay',   ethStr + ' ETH');
-  set('priceUsdDisplay',   '$' + (currentTierUSD/100).toFixed(2) + ' USD');
-  set('oraclePriceRate',   '1 ETH = $' + ethUsdDollars.toLocaleString(undefined,{maximumFractionDigits:2}));
+  set('priceEthDisplay', ethStr + ' ETH');
+  set('priceUsdDisplay', '$' + usdAmount.toFixed(2) + ' USD (fixed)');
+  set('oraclePriceRate', '1 ETH = $' + ethUsdDollars.toLocaleString(undefined,{maximumFractionDigits:2}) + ' · live');
 
-  // Update cost breakdown
   changeQty(0);
 }
 
@@ -2123,7 +2102,7 @@ async function onConnected(){
   try{
     contract=new ethers.Contract(CFG.CONTRACT,ABI,signer);
     // Fetch live ETH/USD price from Chainlink
-    await fetchEthUsdPrice(provider);
+    await fetchEthUsdPrice();
     await loadData();
   }catch(e){console.error(e);}
 
@@ -2263,7 +2242,7 @@ async function handleMint(){
 
   // Refresh oracle price right before mint so value is fresh
   toast('Fetching live ETH price…','','🔄');
-  const ethUsd = await fetchEthUsdPrice(provider || null);
+  const ethUsd = await fetchEthUsdPrice();
   if(!ethUsd || !computedPrice){
     toast('Could not fetch ETH price — please try again','err','⚠');
     return;
@@ -2274,7 +2253,7 @@ async function handleMint(){
 
   try{
     // Re-fetch one more time for freshest price right at mint
-    const freshUsd = await fetchEthUsdPrice(provider || null);
+    const freshUsd = await fetchEthUsdPrice();
     const value = computedPrice * BigInt(qty);
 
     btn.innerHTML='<span class="spin"></span><span>Confirm in wallet…</span>';
@@ -2563,7 +2542,7 @@ renderTierTabs();renderTierDetail();
   set('priceEthDisplay', 'Fetching…');
   set('oraclePriceRate', 'Chainlink oracle');
   try{
-    const priceUsd = await fetchEthUsdPrice(null);
+    const priceUsd = await fetchEthUsdPrice();
     if(priceUsd){
       computedPrice = usdCentsToWei(currentTierUSD);
       changeQty(0);
@@ -2576,7 +2555,7 @@ renderTierTabs();renderTierDetail();
   // Refresh silently every 60s
   setInterval(async()=>{
     try{
-      const priceUsd = await fetchEthUsdPrice(null);
+      const priceUsd = await fetchEthUsdPrice();
       if(priceUsd){
         computedPrice = usdCentsToWei(currentTierUSD);
         changeQty(0);
