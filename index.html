@@ -1060,7 +1060,37 @@ section{position:relative;z-index:1;}
 #toast.gold{border-left-color:var(--gold2);}
 .toast-ico{font-size:1.1rem;flex-shrink:0;}
 
-/* ── SCROLL ANIMATIONS ── */
+/* ── TIER SELECTOR ── */
+.tier-selector-label{
+  font-size:.65rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--muted);margin-bottom:10px;display:block;
+}
+.tier-selector{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;
+}
+.tier-opt{
+  padding:10px 6px;border-radius:12px;border:1px solid var(--border2);
+  background:rgba(255,255,255,0.02);cursor:pointer;text-align:center;
+  transition:all .2s;position:relative;overflow:hidden;
+}
+.tier-opt:hover{background:rgba(255,255,255,0.05);transform:translateY(-1px);}
+.tier-opt.selected{transform:translateY(-2px);}
+.tier-opt-name{
+  font-family:var(--mono);font-size:.72rem;font-weight:700;
+  display:block;margin-bottom:4px;
+}
+.tier-opt-price{
+  font-size:.65rem;color:var(--muted2);display:block;margin-bottom:5px;
+}
+.tier-opt-supply{
+  font-size:.55rem;color:var(--muted);display:block;letter-spacing:.04em;
+}
+.tier-opt-check{
+  position:absolute;top:5px;right:5px;width:14px;height:14px;
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:.55rem;opacity:0;transition:opacity .2s;
+}
+.tier-opt.selected .tier-opt-check{opacity:1;}
 .fade-up{
   opacity:0;transform:translateY(30px);
   transition:all .7s cubic-bezier(.4,0,.2,1);
@@ -1564,6 +1594,38 @@ section{position:relative;z-index:1;}
           </div>
           <div class="mc-prog-track">
             <div class="mc-prog-fill" id="mcProgFill" style="width:0%"></div>
+          </div>
+        </div>
+
+        <span class="field-label tier-selector-label">Select Tier</span>
+        <div class="tier-selector" id="tierSelector">
+          <div class="tier-opt" data-tier="Legendary" data-cents="500" onclick="selectTier(this)"
+            style="border-color:rgba(245,158,11,0.3)">
+            <span class="tier-opt-name" style="color:#f59e0b">Legendary</span>
+            <span class="tier-opt-price">$5</span>
+            <span class="tier-opt-supply">1% · ~100</span>
+            <div class="tier-opt-check" style="background:#f59e0b;color:#000">✓</div>
+          </div>
+          <div class="tier-opt" data-tier="Epic" data-cents="300" onclick="selectTier(this)"
+            style="border-color:rgba(139,92,246,0.3)">
+            <span class="tier-opt-name" style="color:#8b5cf6">Epic</span>
+            <span class="tier-opt-price">$3</span>
+            <span class="tier-opt-supply">9% · ~900</span>
+            <div class="tier-opt-check" style="background:#8b5cf6;color:#fff">✓</div>
+          </div>
+          <div class="tier-opt" data-tier="Rare" data-cents="200" onclick="selectTier(this)"
+            style="border-color:rgba(59,130,246,0.3)">
+            <span class="tier-opt-name" style="color:#3b82f6">Rare</span>
+            <span class="tier-opt-price">$2</span>
+            <span class="tier-opt-supply">30% · ~3K</span>
+            <div class="tier-opt-check" style="background:#3b82f6;color:#fff">✓</div>
+          </div>
+          <div class="tier-opt selected" data-tier="Common" data-cents="100" onclick="selectTier(this)"
+            style="border-color:rgba(34,211,238,0.5);background:rgba(34,211,238,0.07)">
+            <span class="tier-opt-name" style="color:#22d3ee">Common</span>
+            <span class="tier-opt-price">$1</span>
+            <span class="tier-opt-supply">60% · ~6K</span>
+            <div class="tier-opt-check" style="background:#22d3ee;color:#000">✓</div>
           </div>
         </div>
 
@@ -2219,7 +2281,55 @@ function changeQty(d){
   updateBtn();
 }
 
-function updateBtn(){
+/* ── Tier Selector ── */
+const TIER_COLORS = {
+  Legendary:{color:'#f59e0b',bg:'rgba(245,158,11,0.07)',border:'rgba(245,158,11,0.5)'},
+  Epic:      {color:'#8b5cf6',bg:'rgba(139,92,246,0.07)',border:'rgba(139,92,246,0.5)'},
+  Rare:      {color:'#3b82f6',bg:'rgba(59,130,246,0.07)', border:'rgba(59,130,246,0.5)'},
+  Common:    {color:'#22d3ee',bg:'rgba(34,211,238,0.07)', border:'rgba(34,211,238,0.5)'},
+};
+
+function selectTier(el){
+  // Deselect all
+  document.querySelectorAll('.tier-opt').forEach(t=>{
+    const tier = t.dataset.tier;
+    const c = TIER_COLORS[tier];
+    t.classList.remove('selected');
+    t.style.background = 'rgba(255,255,255,0.02)';
+    t.style.borderColor = c.border.replace('0.5','0.3');
+  });
+
+  // Select clicked
+  const tier = el.dataset.tier;
+  const cents = parseInt(el.dataset.cents);
+  const c = TIER_COLORS[tier];
+  el.classList.add('selected');
+  el.style.background = c.bg;
+  el.style.borderColor = c.border;
+
+  // Update global tier
+  currentTierUSD = cents;
+
+  // Recompute price with current oracle data
+  if(ethUsdPrice){
+    computedPrice = usdCentsToWei(currentTierUSD);
+    const ethUsdDollars = ethUsdPrice / 1e8;
+    const usdAmount = cents / 100;
+    const ethAmount = usdAmount / ethUsdDollars;
+    set('priceEthDisplay', ethAmount.toFixed(6) + ' ETH');
+    set('priceUsdDisplay', '$' + usdAmount.toFixed(2) + ' USD (fixed)');
+    changeQty(0);
+  } else {
+    // No price yet — trigger a fresh fetch
+    fetchEthUsdPrice().then(p=>{
+      if(p){ computedPrice = usdCentsToWei(currentTierUSD); changeQty(0); }
+    });
+  }
+
+  toast(`${tier} tier selected — $${(cents/100).toFixed(2)} USD per NFT`,'','✦');
+}
+
+
   const btn=$('mintCta'),txt=$('mintCtaTxt');
   if(didMint)return;
   if(!address){btn.disabled=true;txt.textContent='Connect Wallet to Mint';return;}
