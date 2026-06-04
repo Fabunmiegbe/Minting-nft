@@ -1578,7 +1578,9 @@ section{position:relative;z-index:1;}
         </div>
 
         <div class="cost-card">
-          <div class="cost-row"><span class="ck">Price per NFT</span><span class="cv">By rarity tier</span></div>
+          <div class="cost-row"><span class="ck">Price per NFT</span><span class="cv" id="priceEthDisplay">Fetching…</span></div>
+          <div class="cost-row"><span class="ck">USD Value</span><span class="cv gold" id="priceUsdDisplay">—</span></div>
+          <div class="cost-row"><span class="ck">ETH/USD Rate</span><span class="cv" id="oraclePriceRate" style="font-size:.72rem;color:var(--muted)">Chainlink oracle</span></div>
           <div class="cost-row"><span class="ck">Quantity</span><span class="cv" id="cQty">× 1</span></div>
           <div class="cost-row"><span class="ck">Est. Gas</span><span class="cv" id="cGas">~$0.01</span></div>
           <div class="cost-row cost-total"><span class="ck">Total</span><span class="cv" id="cTotal">0.000488 ETH</span></div>
@@ -1914,16 +1916,33 @@ function toggleFaq(btn){
 /* ── CONFIG ── */
 const CFG = {
   CONTRACT:   "0x545dade39b1877f7f59e6a9e68f562bbc33a0b99",
-  PRICE:      ethers.parseEther("0.000488"),
   MAX_SUPPLY: 10000,
   MAX_PER_TX: 10,
   CHAIN_ID:   8453,
   CHAIN_HEX:  "0x2105",
   EXPLORER:   "https://basescan.org",
+  // Chainlink ETH/USD price feed on Base Mainnet
+  CHAINLINK_FEED: "0x71041dddad3595F9CEd3dCCFBe3D1F4b0a16Bb70",
 };
+
+// USD prices per tier (in cents to avoid float issues)
+const TIER_USD_CENTS = { Legendary: 500, Epic: 300, Rare: 200, Common: 100 };
+// Default to Common until rarity is detected from token ID
+let currentTierUSD = 100; // cents
+
+// Live ETH/USD price fetched from Chainlink (stored as integer, e.g. 340000 = $3400.00)
+let ethUsdPrice = null;
+// Computed ETH price for current tier (as BigInt wei)
+let computedPrice = null;
 
 const NATIVE_TOKEN = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 const EMPTY_PROOF = { proof:[], quantityLimitPerWallet:0, pricePerToken: ethers.MaxUint256, currency: NATIVE_TOKEN };
+
+// Chainlink AggregatorV3Interface — only need latestRoundData
+const CHAINLINK_ABI = [
+  "function latestRoundData() external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)",
+  "function decimals() external view returns (uint8)"
+];
 
 const ABI = [
   "function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken, (bytes32[] proof, uint256 quantityLimitPerWallet, uint256 pricePerToken, address currency) _allowlistProof, bytes _data) external payable",
@@ -1941,6 +1960,62 @@ let qty=1,minting=false,didMint=false;
 /* ── Helpers ── */
 const $=id=>document.getElementById(id);
 const set=(id,v)=>{const e=$(id);if(e)e.textContent=v;};
+
+/* ── Chainlink Oracle ── */
+async function fetchEthUsdPrice(prov){
+  try{
+    // Use a read-only provider if signer provider not available yet
+    const readProv = prov || new ethers.JsonRpcProvider('https://mainnet.base.org');
+    const feed = new ethers.Contract(CFG.CHAINLINK_FEED, CHAINLINK_ABI, readProv);
+    const [,answer,,updatedAt] = await feed.latestRoundData();
+    const decimals = await feed.decimals(); // 8 for ETH/USD
+
+    // Sanity check: data must be fresh (within 2 hours)
+    const age = Math.floor(Date.now()/1000) - Number(updatedAt);
+    if(age > 7200) throw new Error('Stale oracle data');
+
+    // answer has 8 decimals e.g. 340000000000 = $3400.00000000
+    ethUsdPrice = Number(answer); // raw integer with 8 decimals
+    const priceUsd = ethUsdPrice / 1e8;
+
+    updatePriceDisplays(priceUsd);
+    return priceUsd;
+  }catch(e){
+    console.warn('Chainlink fetch failed:', e.message);
+    // Fallback: use last known or show loading
+    return null;
+  }
+}
+
+// Convert USD cents to wei using live ETH price
+function usdCentsToWei(cents){
+  if(!ethUsdPrice) return null;
+  // wei = (cents / 100) / ethUsdPrice_dollars * 1e18
+  // ethUsdPrice has 8 decimals, so ethUsdPrice_dollars = ethUsdPrice / 1e8
+  // wei = cents * 1e18 * 1e8 / (100 * ethUsdPrice)
+  const numerator = BigInt(cents) * BigInt(1e18) * BigInt(1e8);
+  const denominator = BigInt(100) * BigInt(ethUsdPrice);
+  // Add 0.5% buffer so transaction doesn't fail on minor price moves
+  const wei = (numerator * 1005n) / (denominator * 1000n);
+  return wei;
+}
+
+function updatePriceDisplays(ethUsdDollars){
+  // Recompute ETH price for current tier
+  const usdAmount = currentTierUSD / 100;
+  const ethAmount = usdAmount / ethUsdDollars;
+  computedPrice = usdCentsToWei(currentTierUSD);
+
+  const ethStr = ethAmount.toFixed(6);
+
+  // Update all price displays
+  set('priceEthDisplay',   ethStr + ' ETH');
+  set('priceUsdDisplay',   '$' + (currentTierUSD/100).toFixed(2) + ' USD');
+  set('oraclePriceRate',   '1 ETH = $' + ethUsdDollars.toLocaleString(undefined,{maximumFractionDigits:2}));
+
+  // Update cost breakdown
+  changeQty(0);
+}
 
 /* ── Toast ── */
 let tTimer;
@@ -2023,6 +2098,8 @@ async function onConnected(){
 
   try{
     contract=new ethers.Contract(CFG.CONTRACT,ABI,signer);
+    // Fetch live ETH/USD price from Chainlink
+    await fetchEthUsdPrice(provider);
     await loadData();
   }catch(e){console.error(e);}
 
@@ -2127,8 +2204,15 @@ function changeQty(d){
   qty=Math.max(1,Math.min(CFG.MAX_PER_TX,qty+d));
   set('qNum',qty);
   set('cQty','× '+qty);
-  const total=CFG.PRICE*BigInt(qty);
-  set('cTotal',parseFloat(ethers.formatEther(total)).toFixed(6)+' ETH');
+
+  if(computedPrice){
+    const totalWei = computedPrice * BigInt(qty);
+    const totalEth = parseFloat(ethers.formatEther(totalWei)).toFixed(6);
+    const totalUsd = ((currentTierUSD / 100) * qty).toFixed(2);
+    set('cTotal', totalEth + ' ETH ≈ $' + totalUsd);
+  } else {
+    set('cTotal', 'Fetching price…');
+  }
   updateBtn();
 }
 
@@ -2153,24 +2237,35 @@ async function handleMint(){
 
   if(!contract){toast('Contract not connected','err','⚠');return;}
 
+  // Refresh oracle price right before mint so value is fresh
+  toast('Fetching live ETH price…','','🔄');
+  const ethUsd = await fetchEthUsdPrice(provider);
+  if(!ethUsd || !computedPrice){
+    toast('Could not fetch ETH price — please try again','err','⚠');
+    return;
+  }
+
   minting=true;dismissErr();
   const btn=$('mintCta');btn.disabled=true;
 
   try{
-    const value=CFG.PRICE*BigInt(qty);
+    // Re-fetch one more time for freshest price right at mint
+    const freshUsd = await fetchEthUsdPrice(provider);
+    const value = computedPrice * BigInt(qty);
+
     btn.innerHTML='<span class="spin"></span><span>Confirm in wallet…</span>';
-    toast('Approve the transaction in your wallet','','📝');
+    toast(`Minting at $${(currentTierUSD/100).toFixed(2)} USD = ${parseFloat(ethers.formatEther(value)).toFixed(6)} ETH`,'','📝');
 
     let gasLimit;
     try{
       const est=await contract.claim.estimateGas(
-        address,BigInt(qty),NATIVE_TOKEN,CFG.PRICE,EMPTY_PROOF,"0x",{value}
+        address,BigInt(qty),NATIVE_TOKEN,computedPrice,EMPTY_PROOF,"0x",{value}
       );
       gasLimit=(est*125n)/100n;
     }catch{gasLimit=300000n;}
 
     const tx=await contract.claim(
-      address,BigInt(qty),NATIVE_TOKEN,CFG.PRICE,EMPTY_PROOF,"0x",
+      address,BigInt(qty),NATIVE_TOKEN,computedPrice,EMPTY_PROOF,"0x",
       {value,gasLimit}
     );
 
@@ -2438,6 +2533,28 @@ const RARITY_TABLE=[
 })();
 
 renderTierTabs();renderTierDetail();
+
+/* ── FETCH ORACLE ON LOAD (read-only, no wallet needed) ── */
+(async function initOraclePrice(){
+  try{
+    const readProv = new ethers.JsonRpcProvider('https://mainnet.base.org');
+    const priceUsd = await fetchEthUsdPrice(readProv);
+    if(priceUsd){
+      // Recompute for default Common tier
+      computedPrice = usdCentsToWei(currentTierUSD);
+      changeQty(0);
+    }
+  }catch(e){ console.warn('Initial oracle fetch:', e); }
+  // Refresh price every 60 seconds silently
+  setInterval(async()=>{
+    try{
+      const readProv = new ethers.JsonRpcProvider('https://mainnet.base.org');
+      await fetchEthUsdPrice(readProv);
+      computedPrice = usdCentsToWei(currentTierUSD);
+      changeQty(0);
+    }catch{}
+  }, 60000);
+})();
 
 /* ── INIT ── */
 changeQty(0);
