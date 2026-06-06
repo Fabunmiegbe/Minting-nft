@@ -1314,7 +1314,7 @@ section{position:relative;z-index:1;}
         <a href="#mint" class="btn-hero-primary">
           ⚡ Mint Now
         </a>
-        <a href="https://basescan.org/address/0x545dade39b1877f7f59e6a9e68f562bbc33a0b99" target="_blank" class="btn-hero-secondary">
+        <a id="basescanLink" href="https://basescan.org/address/0x545dade39b1877f7f59e6a9e68f562bbc33a0b99" target="_blank" class="btn-hero-secondary">
           View Contract ↗
         </a>
       </div>
@@ -1404,7 +1404,7 @@ section{position:relative;z-index:1;}
         <h2 class="section-title">Gallery Preview</h2>
         <p class="section-sub">Each piece rendered at gallery resolution — 4096×4096px on-chain. Live generative preview below.</p>
       </div>
-      <a href="https://basescan.org/address/0x545dade39b1877f7f59e6a9e68f562bbc33a0b99" target="_blank" class="view-all-link">
+      <a id="basescanLink" href="https://basescan.org/address/0x545dade39b1877f7f59e6a9e68f562bbc33a0b99" target="_blank" class="view-all-link">
         View All on BaseScan →
       </a>
     </div>
@@ -1668,7 +1668,7 @@ section{position:relative;z-index:1;}
 
         <p class="mc-note">
           Gas fees apply · Payments go to treasury · Base Mainnet ·
-          <a href="https://basescan.org/address/0x545dade39b1877f7f59e6a9e68f562bbc33a0b99" target="_blank">BaseScan ↗</a>
+          <a id="basescanLink" href="https://basescan.org/address/0x545dade39b1877f7f59e6a9e68f562bbc33a0b99" target="_blank">BaseScan ↗</a>
         </p>
       </div>
     </div>
@@ -1810,7 +1810,7 @@ section{position:relative;z-index:1;}
       <div class="cc-item">
         <div class="cc-label">Contract Address</div>
         <div class="cc-value">
-          <a href="https://basescan.org/address/0x545dade39b1877f7f59e6a9e68f562bbc33a0b99" target="_blank">
+          <a id="basescanLink" href="https://basescan.org/address/0x545dade39b1877f7f59e6a9e68f562bbc33a0b99" target="_blank">
             0x545dade39b1877f7f59e6a9e68f562bbc33a0b99
           </a>
         </div>
@@ -1847,7 +1847,7 @@ section{position:relative;z-index:1;}
         <div class="footer-socials">
           <a href="#" class="social-btn" title="Twitter">𝕏</a>
           <a href="#" class="social-btn" title="Discord">💬</a>
-          <a href="https://basescan.org/address/0x545dade39b1877f7f59e6a9e68f562bbc33a0b99" target="_blank" class="social-btn" title="BaseScan">⛓</a>
+          <a id="basescanLink" href="https://basescan.org/address/0x545dade39b1877f7f59e6a9e68f562bbc33a0b99" target="_blank" class="social-btn" title="BaseScan">⛓</a>
         </div>
       </div>
       <div class="footer-col">
@@ -1859,7 +1859,7 @@ section{position:relative;z-index:1;}
       </div>
       <div class="footer-col">
         <h4>Resources</h4>
-        <a href="https://basescan.org/address/0x545dade39b1877f7f59e6a9e68f562bbc33a0b99" target="_blank">Contract</a>
+        <a id="basescanLink" href="https://basescan.org/address/0x545dade39b1877f7f59e6a9e68f562bbc33a0b99" target="_blank">Contract</a>
         <a href="https://bridge.base.org" target="_blank">Bridge to Base</a>
         <a href="https://chainlist.org/chain/8453" target="_blank">Add Base to Wallet</a>
         <a href="https://opensea.io" target="_blank">OpenSea</a>
@@ -1977,13 +1977,20 @@ function toggleFaq(btn){
 <script>
 /* ── CONFIG ── */
 const CFG = {
+  // Contract per tier — each has its own claim condition and price
+  CONTRACTS: {
+    Common:    "0x545dade39b1877f7f59e6a9e68f562bbc33a0b99",
+    Rare:      "0x2128f9c8efb4e4e2101a1a4fe83f7e21ff2e1a03",
+    Epic:      "0xcc43add528128ba1e7053b7ffe8c7098fcb74234",
+    Legendary: "0x673ee115406dd4ef45c75f3607b23964b9c7e7d3",
+  },
+  // Legacy single contract (kept for reference)
   CONTRACT:   "0x545dade39b1877f7f59e6a9e68f562bbc33a0b99",
-  MAX_SUPPLY: 10000,
+  MAX_SUPPLY: { Common: 6000, Rare: 3000, Epic: 900, Legendary: 100 },
   MAX_PER_TX: 10,
   CHAIN_ID:   8453,
   CHAIN_HEX:  "0x2105",
   EXPLORER:   "https://basescan.org",
-  // Chainlink ETH/USD price feed on Base Mainnet
   CHAINLINK_FEED: "0x71041dddad3595F9CEd3dCCFBe3D1F4b0a16Bb70",
 };
 
@@ -2006,16 +2013,66 @@ const ABI = [
   "function nextTokenIdToMint() external view returns (uint256)",
   "function balanceOf(address owner) external view returns (uint256)",
   "function getActiveClaimConditionId() external view returns (uint256)",
+  "function claimCondition() external view returns (uint256 currentStartId, uint256 count)",
+  "function getClaimConditionById(uint256 _conditionId) external view returns (tuple(uint256 startTimestamp, uint256 maxClaimableSupply, uint256 supplyClaimed, uint256 quantityLimitPerWalletPerPhase, bytes32 merkleRoot, uint256 pricePerToken, address currency, string metadata))",
   "function paused() external view returns (bool)",
 ];
 
 /* ── State ── */
 let provider=null,signer=null,contract=null,address=null;
 let qty=1,minting=false,didMint=false;
+let activeTierName = "Common"; // currently selected tier
+
+// Price read directly from contract claim condition (BigInt wei)
+let contractPrice    = null;
+let contractCurrency = null;
 
 /* ── Helpers ── */
 const $=id=>document.getElementById(id);
 const set=(id,v)=>{const e=$(id);if(e)e.textContent=v;};
+
+/* ── Read price directly from ThirdWeb claim condition ── */
+async function fetchContractPrice(){
+  if(!contract) return null;
+  try{
+    // Get active claim condition ID
+    const conditionId = await contract.getActiveClaimConditionId();
+
+    // Read the full claim condition
+    const condition = await contract.getClaimConditionById(conditionId);
+    // condition[5] = pricePerToken, condition[6] = currency
+    const priceWei  = BigInt(condition[5].toString());
+    const currency  = condition[6];
+
+    contractPrice   = priceWei;
+    contractCurrency = currency;
+
+    // Display the price from contract
+    const priceEth = parseFloat(ethers.formatEther(priceWei));
+
+    // Show ETH equivalent + USD value using oracle
+    if(ethUsdPrice){
+      const ethUsdDollars = ethUsdPrice / 1e8;
+      const usdValue = priceEth * ethUsdDollars;
+      set('priceEthDisplay', priceEth.toFixed(6) + ' ETH');
+      set('priceUsdDisplay', '≈ $' + usdValue.toFixed(2) + ' USD');
+      set('oraclePriceRate', '1 ETH = $' + ethUsdDollars.toLocaleString(undefined,{maximumFractionDigits:2}) + ' · live');
+    } else {
+      set('priceEthDisplay', priceEth.toFixed(6) + ' ETH');
+      set('priceUsdDisplay', 'Fetching USD…');
+    }
+
+    // Use contractPrice for USD display but keep tier USD for reference
+    computedPrice = priceWei;
+    changeQty(0);
+    console.log('Contract price:', priceEth, 'ETH, currency:', currency);
+    return priceWei;
+  } catch(e){
+    console.warn('Could not read claim condition price:', e.message);
+    // Fall back to oracle-computed price if contract read fails
+    return computedPrice;
+  }
+}
 
 /* ── ETH/USD Price Fetcher (pure HTTP, no RPC, no CORS issues) ── */
 const PRICE_APIS = [
@@ -2162,9 +2219,11 @@ async function onConnected(){
   }
 
   try{
-    contract=new ethers.Contract(CFG.CONTRACT,ABI,signer);
-    // Fetch live ETH/USD price from Chainlink
-    await fetchEthUsdPrice();
+    // Connect to whichever tier is currently selected
+    const tierContract = CFG.CONTRACTS[activeTierName] || CFG.CONTRACTS.Common;
+    contract = new ethers.Contract(tierContract, ABI, signer);
+    // Fetch ETH/USD price AND contract claim condition price in parallel
+    await Promise.all([fetchEthUsdPrice(), fetchContractPrice()]);
     await loadData();
   }catch(e){console.error(e);}
 
@@ -2230,9 +2289,10 @@ async function loadData(){
       claimActive=!isPaused;
     }catch{ claimActive=!isPaused&&minted>=0; }
 
-    const remaining=Math.max(0,CFG.MAX_SUPPLY-minted);
-    const pct=Math.min((minted/CFG.MAX_SUPPLY)*100,100);
-    const pctStr=pct.toFixed(1);
+    const tierMax  = CFG.MAX_SUPPLY[activeTierName] || 10000;
+    const remaining = Math.max(0, tierMax - minted);
+    const pct       = Math.min((minted / tierMax) * 100, 100);
+    const pctStr    = pct.toFixed(1);
 
     // Update all stat displays
     set('sMinted',   minted.toLocaleString());
@@ -2254,6 +2314,8 @@ async function loadData(){
     else if(claimActive) setSalePill('live','🟢 Public Sale Live');
     else                setSalePill('off','⚙ Loading…');
 
+    // Always re-read contract price so it stays in sync
+    await fetchContractPrice();
     updateBtn();
   }catch(e){console.error('loadData:',e);}
 }
@@ -2270,11 +2332,19 @@ function changeQty(d){
   set('qNum',qty);
   set('cQty','× '+qty);
 
-  if(computedPrice){
-    const totalWei = computedPrice * BigInt(qty);
+  // Prefer contractPrice (from ThirdWeb claim condition), fall back to oracle
+  const price = contractPrice || computedPrice;
+  if(price){
+    const totalWei = price * BigInt(qty);
     const totalEth = parseFloat(ethers.formatEther(totalWei)).toFixed(6);
-    const totalUsd = ((currentTierUSD / 100) * qty).toFixed(2);
-    set('cTotal', totalEth + ' ETH ≈ $' + totalUsd);
+    // Show USD if oracle available
+    if(ethUsdPrice){
+      const ethUsdDollars = ethUsdPrice / 1e8;
+      const totalUsd = (parseFloat(ethers.formatEther(totalWei)) * ethUsdDollars).toFixed(2);
+      set('cTotal', totalEth + ' ETH\n≈ $' + totalUsd);
+    } else {
+      set('cTotal', totalEth + ' ETH');
+    }
   } else {
     set('cTotal', 'Fetching price…');
   }
@@ -2309,33 +2379,55 @@ function selectTier(el){
   });
 
   // Select clicked
-  const tier = el.dataset.tier;
+  const tier  = el.dataset.tier;
   const cents = parseInt(el.dataset.cents);
-  const c = TIER_COLORS[tier];
+  const c     = TIER_COLORS[tier];
   el.classList.add('selected');
-  el.style.background = c.bg;
+  el.style.background  = c.bg;
   el.style.borderColor = c.border;
 
-  // Update global tier
-  currentTierUSD = cents;
+  // Update global tier name and USD amount
+  activeTierName  = tier;
+  currentTierUSD  = cents;
 
-  // Recompute price with current oracle data
-  if(ethUsdPrice){
+  // Switch contract to the selected tier's contract
+  if(signer){
+    const tierContract = CFG.CONTRACTS[tier];
+    contract = new ethers.Contract(tierContract, ABI, signer);
+    // Reset prices so we re-fetch from new contract
+    contractPrice    = null;
+    contractCurrency = null;
+    computedPrice    = null;
+    // Re-read price from new contract
+    set('priceEthDisplay', 'Fetching…');
+    set('priceUsdDisplay',  '—');
+    fetchContractPrice().then(()=> changeQty(0));
+  } else if(ethUsdPrice){
+    // Not connected yet — show oracle estimate
     computedPrice = usdCentsToWei(currentTierUSD);
     const ethUsdDollars = ethUsdPrice / 1e8;
-    const usdAmount = cents / 100;
-    const ethAmount = usdAmount / ethUsdDollars;
+    const usdAmount     = cents / 100;
+    const ethAmount     = usdAmount / ethUsdDollars;
     set('priceEthDisplay', ethAmount.toFixed(6) + ' ETH');
-    set('priceUsdDisplay', '$' + usdAmount.toFixed(2) + ' USD (fixed)');
+    set('priceUsdDisplay', '$' + usdAmount.toFixed(2) + ' USD (est.)');
     changeQty(0);
   } else {
-    // No price yet — trigger a fresh fetch
     fetchEthUsdPrice().then(p=>{
       if(p){ computedPrice = usdCentsToWei(currentTierUSD); changeQty(0); }
     });
   }
 
-  toast(`${tier} tier selected — $${(cents/100).toFixed(2)} USD per NFT`,'','✦');
+  // Update max supply display for selected tier
+  const supplyEl = document.getElementById('mint-remain-val');
+  if(supplyEl) supplyEl.textContent = (CFG.MAX_SUPPLY[tier]||0).toLocaleString();
+
+  // Update BaseScan links to point to active tier contract
+  const tierAddr = CFG.CONTRACTS[tier];
+  document.querySelectorAll('#basescanLink').forEach(el=>{
+    el.href = `https://basescan.org/address/${tierAddr}`;
+  });
+
+  toast(`${tier} tier selected — contract switched`,'','✦');
 }
 
 /* ── MINT ── */
@@ -2350,42 +2442,50 @@ async function handleMint(){
 
   if(!contract){toast('Contract not connected','err','⚠');return;}
 
-  // Refresh oracle price right before mint so value is fresh
-  toast('Fetching live ETH price…','','🔄');
-  const ethUsd = await fetchEthUsdPrice();
-  if(!ethUsd || !computedPrice){
-    toast('Could not fetch ETH price — please try again','err','⚠');
-    return;
-  }
-
   minting=true;dismissErr();
   const btn=$('mintCta');btn.disabled=true;
 
   try{
-    // Re-fetch one more time for freshest price right at mint
-    const freshUsd = await fetchEthUsdPrice();
-    const value = computedPrice * BigInt(qty);
+    // ── Step 1: Read EXACT price from contract claim condition ──
+    btn.innerHTML='<span class="spin"></span><span>Reading contract…</span>';
+    toast('Reading price from contract…','','🔄');
+
+    const claimPrice = await fetchContractPrice();
+    if(claimPrice === null || claimPrice === undefined){
+      throw new Error('Could not read price from contract — check claim conditions in ThirdWeb');
+    }
+
+    const pricePerToken = claimPrice;
+    const currency      = contractCurrency || NATIVE_TOKEN;
+    const value         = pricePerToken * BigInt(qty);
+    const priceEth      = parseFloat(ethers.formatEther(pricePerToken)).toFixed(6);
 
     btn.innerHTML='<span class="spin"></span><span>Confirm in wallet…</span>';
-    toast(`Minting at $${(currentTierUSD/100).toFixed(2)} USD = ${parseFloat(ethers.formatEther(value)).toFixed(6)} ETH`,'','📝');
+    toast(`Minting ${qty} NFT${qty>1?'s':''} — ${priceEth} ETH each`,'','📝');
 
+    // ── Step 2: Estimate gas ──
     let gasLimit;
     try{
-      const est=await contract.claim.estimateGas(
-        address,BigInt(qty),NATIVE_TOKEN,computedPrice,EMPTY_PROOF,"0x",{value}
+      const est = await contract.claim.estimateGas(
+        address, BigInt(qty), currency, pricePerToken, EMPTY_PROOF, "0x",
+        { value }
       );
-      gasLimit=(est*125n)/100n;
-    }catch{gasLimit=300000n;}
+      gasLimit = (est * 130n) / 100n;
+    }catch(gasErr){
+      console.warn('Gas estimate failed:', gasErr.message);
+      gasLimit = 300000n;
+    }
 
-    const tx=await contract.claim(
-      address,BigInt(qty),NATIVE_TOKEN,computedPrice,EMPTY_PROOF,"0x",
-      {value,gasLimit}
+    // ── Step 3: Send transaction ──
+    const tx = await contract.claim(
+      address, BigInt(qty), currency, pricePerToken, EMPTY_PROOF, "0x",
+      { value, gasLimit }
     );
 
     btn.innerHTML='<span class="spin"></span><span>Minting on Base…</span>';
     toast('Transaction submitted — confirming…','','⏳');
 
-    const receipt=await tx.wait();
+    const receipt = await tx.wait();
 
     if(receipt.status===1){
       didMint=true;
@@ -2403,10 +2503,13 @@ async function handleMint(){
     console.error(e);
     const raw=e?.reason||e?.shortMessage||e?.message||'';
     const msg=
-      (raw.includes('user rejected')||e.code===4001)?'Transaction cancelled':
-      raw.includes('insufficient funds')?'Not enough ETH in wallet':
-      raw.includes('execution reverted')?'Contract rejected — check sale status':
-      (raw||'Transaction failed').slice(0,80);
+      (raw.includes('user rejected')||e.code===4001) ? 'Transaction cancelled' :
+      raw.includes('insufficient funds')              ? 'Not enough ETH in wallet' :
+      raw.includes('!Qty')                            ? 'Exceeds max per wallet' :
+      raw.includes('!Sale')||raw.includes('!Active')  ? 'Sale not active — set a claim condition in ThirdWeb' :
+      raw.includes('claim conditions')                ? 'No active claim condition — check ThirdWeb dashboard' :
+      raw.includes('execution reverted')              ? 'Contract rejected — check claim conditions in ThirdWeb' :
+      (raw||'Transaction failed').slice(0,100);
     $('msgErrTxt').textContent=msg;
     $('msgErr').style.display='flex';
     btn.innerHTML=`<span id="mintCtaTxt">⚡ Mint ${qty} BIRBX NFT${qty>1?'s':''}</span>`;
