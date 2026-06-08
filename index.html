@@ -1977,15 +1977,14 @@ function toggleFaq(btn){
 <script>
 /* ── CONFIG ── */
 const CFG = {
-  // Contract per tier — each has its own claim condition and price
+  // Contract per tier — all deployed on NFTs2Me on Base Mainnet
   CONTRACTS: {
-    Common:    "0x545dade39b1877f7f59e6a9e68f562bbc33a0b99",
-    Rare:      "0x2128f9c8efb4e4e2101a1a4fe83f7e21ff2e1a03",
-    Epic:      "0xcc43add528128ba1e7053b7ffe8c7098fcb74234",
-    Legendary: "0x673ee115406dd4ef45c75f3607b23964b9c7e7d3",
+    Common:    "0x7a01E7d1fae7F8eBf61f7585f8035c0CC948D655",
+    Rare:      "0xC85f4f718018c15Ee758a460Ec4A946AdF7e8020",
+    Epic:      "0x52a0094Fca7A85A1E432BeFfBDE7bc84CC49Eba4",
+    Legendary: "0xDA98A127eD0611A40BBA513f83f88B6e8db575Ec",
   },
-  // Legacy single contract (kept for reference)
-  CONTRACT:   "0x545dade39b1877f7f59e6a9e68f562bbc33a0b99",
+  CONTRACT:   "0x7a01E7d1fae7F8eBf61f7585f8035c0CC948D655",
   MAX_SUPPLY: { Common: 6000, Rare: 3000, Epic: 900, Legendary: 100 },
   MAX_PER_TX: 10,
   CHAIN_ID:   8453,
@@ -2005,16 +2004,19 @@ let ethUsdPrice = null;
 let computedPrice = null;
 
 const NATIVE_TOKEN = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
-const EMPTY_PROOF = { proof:[], quantityLimitPerWallet:0, pricePerToken: ethers.MaxUint256, currency: NATIVE_TOKEN };
 
+// NFTs2Me ERC-721 drop ABI
 const ABI = [
-  "function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken, (bytes32[] proof, uint256 quantityLimitPerWallet, uint256 pricePerToken, address currency) _allowlistProof, bytes _data) external payable",
+  // NFTs2Me mint function
+  "function mint(uint256 amount) external payable",
+  "function mintTo(address to, uint256 amount) external payable",
+  // Price & supply
+  "function mintPrice() external view returns (uint256)",
   "function totalSupply() external view returns (uint256)",
-  "function nextTokenIdToMint() external view returns (uint256)",
+  "function maxSupply() external view returns (uint256)",
   "function balanceOf(address owner) external view returns (uint256)",
-  "function getActiveClaimConditionId() external view returns (uint256)",
-  "function claimCondition() external view returns (uint256 currentStartId, uint256 count)",
-  "function getClaimConditionById(uint256 _conditionId) external view returns (tuple(uint256 startTimestamp, uint256 maxClaimableSupply, uint256 supplyClaimed, uint256 quantityLimitPerWalletPerPhase, bytes32 merkleRoot, uint256 pricePerToken, address currency, string metadata))",
+  // Sale status
+  "function saleStarted() external view returns (bool)",
   "function paused() external view returns (bool)",
 ];
 
@@ -2031,26 +2033,17 @@ let contractCurrency = null;
 const $=id=>document.getElementById(id);
 const set=(id,v)=>{const e=$(id);if(e)e.textContent=v;};
 
-/* ── Read price directly from ThirdWeb claim condition ── */
+/* ── Read price directly from NFTs2Me contract ── */
 async function fetchContractPrice(){
   if(!contract) return null;
   try{
-    // Get active claim condition ID
-    const conditionId = await contract.getActiveClaimConditionId();
+    // NFTs2Me exposes mintPrice() directly
+    const priceWei = BigInt((await contract.mintPrice()).toString());
+    contractPrice    = priceWei;
+    contractCurrency = NATIVE_TOKEN;
 
-    // Read the full claim condition
-    const condition = await contract.getClaimConditionById(conditionId);
-    // condition[5] = pricePerToken, condition[6] = currency
-    const priceWei  = BigInt(condition[5].toString());
-    const currency  = condition[6];
-
-    contractPrice   = priceWei;
-    contractCurrency = currency;
-
-    // Display the price from contract
     const priceEth = parseFloat(ethers.formatEther(priceWei));
 
-    // Show ETH equivalent + USD value using oracle
     if(ethUsdPrice){
       const ethUsdDollars = ethUsdPrice / 1e8;
       const usdValue = priceEth * ethUsdDollars;
@@ -2062,14 +2055,12 @@ async function fetchContractPrice(){
       set('priceUsdDisplay', 'Fetching USD…');
     }
 
-    // Use contractPrice for USD display but keep tier USD for reference
     computedPrice = priceWei;
     changeQty(0);
-    console.log('Contract price:', priceEth, 'ETH, currency:', currency);
+    console.log('Contract mint price:', priceEth, 'ETH');
     return priceWei;
-  } catch(e){
-    console.warn('Could not read claim condition price:', e.message);
-    // Fall back to oracle-computed price if contract read fails
+  }catch(e){
+    console.warn('Could not read mintPrice():', e.message);
     return computedPrice;
   }
 }
@@ -2277,32 +2268,27 @@ function disconnect(){
 async function loadData(){
   if(!contract)return;
   try{
-    let minted=0,claimActive=false,isPaused=false;
+    let minted=0,isPaused=false,saleActive=true,maxSupply=CFG.MAX_SUPPLY[activeTierName]||10000;
 
-    try{ minted=Number(await contract.totalSupply()); }
-    catch{ try{ minted=Number(await contract.nextTokenIdToMint()); }catch{} }
-
+    try{ minted=Number(await contract.totalSupply()); }catch{}
     try{ isPaused=await contract.paused(); }catch{}
+    try{ saleActive=await contract.saleStarted(); }catch{ saleActive=!isPaused; }
+    try{ maxSupply=Number(await contract.maxSupply()); }catch{}
 
-    try{
-      await contract.getActiveClaimConditionId();
-      claimActive=!isPaused;
-    }catch{ claimActive=!isPaused&&minted>=0; }
-
-    const tierMax  = CFG.MAX_SUPPLY[activeTierName] || 10000;
-    const remaining = Math.max(0, tierMax - minted);
-    const pct       = Math.min((minted / tierMax) * 100, 100);
+    const remaining = Math.max(0, maxSupply - minted);
+    const pct       = Math.min((minted / maxSupply) * 100, 100);
     const pctStr    = pct.toFixed(1);
 
     // Update all stat displays
-    set('sMinted',   minted.toLocaleString());
-    set('sLeft',     remaining.toLocaleString());
-    set('heroMinted',minted.toLocaleString());
-    set('heroLeft',  remaining.toLocaleString());
-    set('progMinted',minted.toLocaleString());
-    set('progPct',   pctStr);
-    set('mcProgTxt', `${minted.toLocaleString()} / ${CFG.MAX_SUPPLY.toLocaleString()}`);
-    set('mcProgPct', pctStr+'%');
+    set('sMinted',    minted.toLocaleString());
+    set('sLeft',      remaining.toLocaleString());
+    set('heroMinted', minted.toLocaleString());
+    set('heroLeft',   remaining.toLocaleString());
+    set('progMinted', minted.toLocaleString());
+    set('progPct',    pctStr);
+    set('mcProgTxt',  `${minted.toLocaleString()} / ${maxSupply.toLocaleString()}`);
+    set('mcProgPct',  pctStr+'%');
+    set('mint-remain-val', remaining.toLocaleString());
 
     // Progress bars
     const fillEl=$('progFill');
@@ -2311,10 +2297,10 @@ async function loadData(){
     if(mcFill) mcFill.style.width=pctStr+'%';
 
     if(isPaused)        setSalePill('off','⏸ Minting Paused');
-    else if(claimActive) setSalePill('live','🟢 Public Sale Live');
-    else                setSalePill('off','⚙ Loading…');
+    else if(saleActive) setSalePill('live','🟢 Public Sale Live');
+    else                setSalePill('off','⚙ Sale Not Started');
 
-    // Always re-read contract price so it stays in sync
+    // Re-read contract price
     await fetchContractPrice();
     updateBtn();
   }catch(e){console.error('loadData:',e);}
@@ -2466,21 +2452,15 @@ async function handleMint(){
     // ── Step 2: Estimate gas ──
     let gasLimit;
     try{
-      const est = await contract.claim.estimateGas(
-        address, BigInt(qty), currency, pricePerToken, EMPTY_PROOF, "0x",
-        { value }
-      );
+      const est = await contract.mint.estimateGas(BigInt(qty), { value });
       gasLimit = (est * 130n) / 100n;
     }catch(gasErr){
       console.warn('Gas estimate failed:', gasErr.message);
       gasLimit = 300000n;
     }
 
-    // ── Step 3: Send transaction ──
-    const tx = await contract.claim(
-      address, BigInt(qty), currency, pricePerToken, EMPTY_PROOF, "0x",
-      { value, gasLimit }
-    );
+    // ── Step 3: Send transaction using NFTs2Me mint() ──
+    const tx = await contract.mint(BigInt(qty), { value, gasLimit });
 
     btn.innerHTML='<span class="spin"></span><span>Minting on Base…</span>';
     toast('Transaction submitted — confirming…','','⏳');
