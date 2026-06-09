@@ -1,0 +1,2793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>BIRBX — Premium NFT Collection on Base</title>
+<meta name="description" content="BIRBX — 10,000 unique generative NFTs on Base. From $1. Join the most anticipated NFT drop of the season."/>
+<meta name="keywords" content="BIRBX, NFT, Base Network, Mint, ERC-721, Web3, Generative Art"/>
+<meta property="og:title" content="BIRBX — Premium NFT Collection"/>
+<meta property="og:description" content="10,000 unique NFTs on Base. Common $1 · Rare $2 · Epic $3 · Legendary $5."/>
+<meta property="og:type" content="website"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="theme-color" content="#050816"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/ethers@6.7.0/dist/ethers.umd.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════
+   BIRBX PREMIUM — Design System
+   Dark luxury · Neon blue · Purple · Gold
+═══════════════════════════════════════════════════ */
+:root {
+  --bg:        #050816;
+  --bg2:       #080d1f;
+  --bg3:       #0c1228;
+  --surface:   #0f1630;
+  --surface2:  #131b38;
+  --border:    rgba(99,179,237,0.1);
+  --border2:   rgba(99,179,237,0.2);
+  --border3:   rgba(255,255,255,0.06);
+  --blue:      #3b82f6;
+  --blue2:     #60a5fa;
+  --blue3:     #93c5fd;
+  --purple:    #8b5cf6;
+  --purple2:   #a78bfa;
+  --gold:      #f59e0b;
+  --gold2:     #fbbf24;
+  --cyan:      #22d3ee;
+  --white:     #f8fafc;
+  --text:      #cbd5e1;
+  --muted:     #475569;
+  --muted2:    #64748b;
+  --success:   #22c55e;
+  --error:     #f43f5e;
+  --font:      'Space Grotesk', sans-serif;
+  --mono:      'Space Mono', monospace;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;font-size:16px;}
+body{
+  font-family:var(--font);
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── CANVAS PARTICLES ── */
+#particles{
+  position:fixed;inset:0;
+  pointer-events:none;z-index:0;
+  opacity:.5;
+}
+
+/* ── BACKGROUND LAYERS ── */
+.bg-layer{
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 100% 60% at 50% -20%, rgba(59,130,246,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 0% 50%, rgba(139,92,246,0.07) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 80% at 100% 80%, rgba(34,211,238,0.05) 0%, transparent 50%);
+}
+
+/* ── NAVBAR ── */
+.navbar{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  background:rgba(5,8,22,0.85);
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  border-bottom:1px solid var(--border3);
+  transition:all .3s;
+}
+.nav-inner{
+  max-width:1280px;margin:0 auto;
+  padding:0 24px;
+  display:flex;align-items:center;justify-content:space-between;
+  height:72px;
+}
+.nav-logo{
+  display:flex;align-items:center;gap:12px;
+  text-decoration:none;
+}
+.logo-img{
+  width:40px;height:40px;border-radius:10px;
+  overflow:hidden;border:1px solid var(--border2);
+}
+.logo-img img{width:100%;height:100%;object-fit:cover;}
+.logo-text{
+  font-family:var(--mono);font-size:1.3rem;font-weight:700;
+  color:var(--white);letter-spacing:.06em;
+}
+.logo-text span{
+  background:linear-gradient(135deg,var(--blue2),var(--purple2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.nav-links{
+  display:flex;align-items:center;gap:32px;
+}
+.nav-links a{
+  font-size:.85rem;font-weight:500;color:var(--muted2);
+  text-decoration:none;transition:color .2s;letter-spacing:.02em;
+}
+.nav-links a:hover{color:var(--white);}
+.nav-right{display:flex;align-items:center;gap:12px;}
+.nav-badge{
+  display:none;align-items:center;gap:6px;
+  font-size:.68rem;font-weight:600;letter-spacing:.06em;
+  border:1px solid rgba(34,197,94,.25);
+  background:rgba(34,197,94,.06);
+  color:var(--success);
+  padding:5px 12px;border-radius:100px;
+}
+.nb-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--success);
+  box-shadow:0 0 8px var(--success);
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── WALLET BTN ── */
+#walletBtn{
+  font-family:var(--font);font-size:.82rem;font-weight:600;
+  padding:10px 22px;border-radius:10px;border:none;cursor:pointer;
+  transition:all .25s;white-space:nowrap;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  color:#fff;
+  display:flex;align-items:center;gap:8px;
+  box-shadow:0 4px 20px rgba(59,130,246,0.25);
+}
+#walletBtn:hover{transform:translateY(-1px);box-shadow:0 6px 30px rgba(59,130,246,0.4);}
+#walletBtn.connected{
+  background:rgba(34,197,94,.08);
+  border:1px solid rgba(34,197,94,.25);
+  color:var(--success);
+  box-shadow:none;
+}
+#walletBtn.wrong-chain{
+  background:rgba(244,63,94,.08);
+  border:1px solid rgba(244,63,94,.3);
+  color:var(--error);
+  box-shadow:none;
+  animation:shake .4s;
+}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.wdot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--success);
+  box-shadow:0 0 8px var(--success);
+  animation:pulse 2s infinite;flex-shrink:0;
+}
+
+/* ── MODAL ── */
+.overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.8);
+  backdrop-filter:blur(16px);
+  z-index:2000;
+  align-items:center;justify-content:center;
+}
+.overlay.open{display:flex;}
+.modal{
+  background:linear-gradient(135deg,var(--surface),var(--bg3));
+  border:1px solid var(--border2);
+  border-radius:24px;
+  width:100%;max-width:420px;margin:16px;
+  overflow:hidden;position:relative;
+  box-shadow:0 24px 80px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,.03);
+  animation:modalIn .3s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes modalIn{from{opacity:0;transform:scale(.9) translateY(20px)}to{opacity:1;transform:none}}
+.modal-bar{
+  position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--blue),var(--purple),var(--cyan),var(--blue));
+  background-size:300%;animation:gradFlow 4s linear infinite;
+}
+@keyframes gradFlow{0%{background-position:0%}100%{background-position:300%}}
+.modal-head{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:28px 28px 16px;
+}
+.modal-title{font-size:1.2rem;font-weight:700;color:var(--white);}
+.modal-close{
+  width:32px;height:32px;border-radius:8px;
+  background:rgba(255,255,255,.06);border:none;
+  color:var(--muted2);cursor:pointer;font-size:1rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.modal-close:hover{background:rgba(255,255,255,.1);color:var(--white);}
+.modal-sub{font-size:.78rem;color:var(--muted);padding:0 28px 16px;}
+.wallet-list{padding:8px 16px 20px;}
+.wopt{
+  display:flex;align-items:center;gap:16px;
+  padding:14px 16px;border-radius:14px;
+  border:1px solid transparent;
+  margin-bottom:6px;cursor:pointer;
+  transition:all .2s;
+}
+.wopt:last-child{margin-bottom:0;}
+.wopt:hover{
+  border-color:var(--border2);
+  background:rgba(99,179,237,.05);
+  transform:translateX(4px);
+}
+.wopt-icon{
+  width:42px;height:42px;border-radius:12px;
+  background:var(--surface2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.3rem;flex-shrink:0;overflow:hidden;
+}
+.wopt-icon img{width:100%;height:100%;object-fit:contain;}
+.wopt-name{font-size:.9rem;font-weight:600;color:var(--white);}
+.wopt-sub{font-size:.68rem;color:var(--muted);margin-top:2px;}
+.wopt-arr{margin-left:auto;color:var(--muted);font-size:.9rem;transition:transform .2s;}
+.wopt:hover .wopt-arr{transform:translateX(4px);}
+
+/* ── HERO ── */
+.hero{
+  position:relative;
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  padding-top:72px;
+  overflow:hidden;
+  z-index:1;
+}
+.hero-inner{
+  flex:1;
+  max-width:1280px;margin:0 auto;
+  padding:80px 24px 60px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:80px;
+  align-items:center;
+}
+@media(max-width:900px){
+  .hero-inner{grid-template-columns:1fr;gap:40px;padding:40px 20px;}
+}
+
+.hero-left{position:relative;z-index:1;}
+
+.hero-live-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:.7rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--success);
+  border:1px solid rgba(34,197,94,.2);
+  background:rgba(34,197,94,.06);
+  padding:6px 16px;border-radius:100px;
+  margin-bottom:24px;
+}
+.live-pulse{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--success);
+  box-shadow:0 0 10px var(--success);
+  animation:livePulse 1.5s infinite;
+}
+@keyframes livePulse{
+  0%,100%{transform:scale(1);opacity:1;}
+  50%{transform:scale(1.4);opacity:.7;}
+}
+
+.hero-title{
+  font-size:clamp(3rem,7vw,5.5rem);
+  font-weight:700;line-height:1.0;
+  color:var(--white);
+  margin-bottom:24px;
+  letter-spacing:-.03em;
+}
+.hero-title-grad{
+  display:block;
+  background:linear-gradient(135deg,var(--white) 0%,var(--blue2) 40%,var(--purple2) 70%,var(--cyan) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  background-size:200%;
+  animation:titleGrad 4s ease-in-out infinite alternate;
+}
+@keyframes titleGrad{0%{background-position:0%}100%{background-position:100%}}
+
+.hero-desc{
+  font-size:1rem;color:var(--muted2);
+  max-width:480px;margin-bottom:36px;line-height:1.8;
+}
+
+.hero-quick-stats{
+  display:flex;gap:0;margin-bottom:36px;
+  border:1px solid var(--border2);
+  border-radius:16px;overflow:hidden;
+  background:rgba(255,255,255,.02);
+  backdrop-filter:blur(10px);
+}
+.hqs{
+  flex:1;padding:18px 16px;text-align:center;
+  border-right:1px solid var(--border);
+  position:relative;
+}
+.hqs:last-child{border-right:none;}
+.hqs-val{
+  font-family:var(--mono);font-size:1.4rem;font-weight:700;
+  color:var(--white);margin-bottom:4px;
+  background:linear-gradient(135deg,var(--blue2),var(--purple2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.hqs-key{font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}
+
+.hero-btns{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:32px;}
+
+.btn-hero-primary{
+  display:inline-flex;align-items:center;gap:10px;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  color:#fff;font-size:.95rem;font-weight:700;
+  padding:16px 36px;border-radius:14px;
+  text-decoration:none;border:none;cursor:pointer;
+  font-family:var(--font);
+  transition:all .25s;
+  box-shadow:0 4px 30px rgba(59,130,246,0.35),0 0 0 1px rgba(255,255,255,.05) inset;
+  position:relative;overflow:hidden;
+}
+.btn-hero-primary::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);
+  opacity:0;transition:opacity .2s;
+}
+.btn-hero-primary:hover{transform:translateY(-2px);box-shadow:0 8px 40px rgba(59,130,246,0.5);}
+.btn-hero-primary:hover::before{opacity:1;}
+
+.btn-hero-secondary{
+  display:inline-flex;align-items:center;gap:10px;
+  border:1px solid var(--border2);color:var(--text);
+  font-size:.9rem;font-weight:600;
+  padding:16px 28px;border-radius:14px;
+  text-decoration:none;transition:all .25s;
+  background:rgba(255,255,255,.03);
+}
+.btn-hero-secondary:hover{
+  border-color:var(--blue2);color:var(--white);
+  background:rgba(99,179,237,.07);
+  transform:translateY(-2px);
+}
+
+.hero-trust{
+  display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+  font-size:.72rem;color:var(--muted);
+}
+.htrust-item{display:flex;align-items:center;gap:6px;}
+.htrust-sep{width:1px;height:14px;background:var(--border2);}
+
+/* Hero right — NFT showcase */
+.hero-right{position:relative;}
+.hero-showcase{position:relative;}
+
+.showcase-main{
+  width:100%;max-width:460px;margin:0 auto;
+  border-radius:24px;overflow:hidden;
+  border:1px solid var(--border2);
+  background:var(--surface);
+  box-shadow:
+    0 30px 80px rgba(0,0,0,0.6),
+    0 0 0 1px rgba(255,255,255,.04) inset,
+    0 0 80px rgba(59,130,246,0.1);
+  position:relative;
+  animation:floatMain 6s ease-in-out infinite;
+}
+@keyframes floatMain{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(-12px);}
+}
+.showcase-main::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--blue),var(--purple),var(--cyan));
+  z-index:1;
+}
+.showcase-img{
+  width:100%;aspect-ratio:1;overflow:hidden;
+  background:linear-gradient(135deg,var(--bg3),var(--surface2));
+}
+.showcase-img img{
+  width:100%;height:100%;object-fit:cover;
+  transition:transform .4s;
+}
+.showcase-main:hover .showcase-img img{transform:scale(1.05);}
+.showcase-footer{
+  padding:20px 22px;
+  display:flex;justify-content:space-between;align-items:center;
+  border-top:1px solid var(--border3);
+}
+.sf-left{}
+.sf-name{font-size:1.1rem;font-weight:700;color:var(--white);}
+.sf-id{font-size:.72rem;color:var(--muted);margin-top:2px;}
+.sf-right{text-align:right;}
+.sf-price-label{font-size:.62rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;}
+.sf-price{font-family:var(--mono);font-size:1.1rem;font-weight:700;color:var(--gold2);}
+
+/* Floating cards */
+.float-card{
+  position:absolute;
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:16px;overflow:hidden;
+  box-shadow:0 16px 40px rgba(0,0,0,0.5);
+  width:130px;
+  animation:floatCard 8s ease-in-out infinite;
+}
+.fc1{top:-20px;right:-40px;animation-delay:0s;}
+.fc2{bottom:40px;right:-50px;animation-delay:-3s;}
+.fc3{bottom:-10px;left:-40px;animation-delay:-5s;}
+@keyframes floatCard{
+  0%,100%{transform:translateY(0) rotate(var(--rot,0deg));}
+  50%{transform:translateY(-15px) rotate(var(--rot,0deg));}
+}
+.fc1{--rot:6deg;}
+.fc2{--rot:-4deg;}
+.fc3{--rot:3deg;}
+.float-card-img{width:100%;aspect-ratio:1;overflow:hidden;background:var(--bg3);}
+.float-card-img img{width:100%;height:100%;object-fit:cover;}
+.float-card-body{padding:8px 10px;display:flex;justify-content:space-between;align-items:center;}
+.fc-name{font-size:.6rem;color:var(--muted2);}
+.fc-price{font-size:.65rem;font-weight:700;color:var(--gold2);font-family:var(--mono);}
+
+/* Live mint ticker */
+.mint-ticker{
+  margin-top:16px;
+  display:flex;align-items:center;gap:12px;
+  background:rgba(255,255,255,.03);
+  border:1px solid var(--border);
+  border-radius:100px;
+  padding:8px 16px;
+  font-size:.72rem;color:var(--muted);
+  overflow:hidden;
+  max-width:460px;margin-left:auto;margin-right:auto;
+}
+.ticker-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--success);
+  box-shadow:0 0 8px var(--success);
+  animation:pulse 1.5s infinite;flex-shrink:0;
+}
+.ticker-text{
+  flex:1;overflow:hidden;white-space:nowrap;
+  animation:tickerScroll 20s linear infinite;
+}
+@keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* ── PROGRESS SECTION ── */
+.progress-section{
+  background:rgba(255,255,255,.02);
+  border-top:1px solid var(--border3);
+  padding:20px 0;
+  position:relative;z-index:1;
+}
+.progress-inner{
+  max-width:1280px;margin:0 auto;padding:0 24px;
+}
+.prog-top{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:10px;
+}
+.prog-label{font-size:.75rem;font-weight:600;color:var(--text);}
+.prog-nums{font-family:var(--mono);font-size:.8rem;color:var(--blue2);}
+.prog-track{
+  height:8px;background:rgba(255,255,255,.06);
+  border-radius:100px;overflow:visible;position:relative;
+}
+.prog-fill{
+  height:100%;border-radius:100px;
+  background:linear-gradient(90deg,var(--blue),var(--purple),var(--cyan));
+  transition:width 1.2s cubic-bezier(.4,0,.2,1);
+  position:relative;
+}
+.prog-fill::after{
+  content:'';position:absolute;right:-2px;top:50%;
+  transform:translateY(-50%);
+  width:14px;height:14px;border-radius:50%;
+  background:var(--cyan);
+  box-shadow:0 0 16px var(--cyan),0 0 30px rgba(34,211,238,.3);
+  transition:right 1.2s cubic-bezier(.4,0,.2,1);
+}
+
+/* ── WRAP ── */
+.wrap{max-width:1280px;margin:0 auto;padding:0 24px;}
+
+/* ── SECTION SHARED ── */
+section{position:relative;z-index:1;}
+.section-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:.68rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--blue2);
+  border:1px solid rgba(96,165,250,.18);
+  padding:5px 14px;border-radius:100px;margin-bottom:16px;
+}
+.section-title{
+  font-size:clamp(1.8rem,4vw,2.8rem);font-weight:700;
+  color:var(--white);margin-bottom:14px;
+  letter-spacing:-.02em;line-height:1.1;
+}
+.section-sub{font-size:.9rem;color:var(--muted2);max-width:540px;line-height:1.75;}
+
+/* ── NFT GALLERY ── */
+.gallery-section{padding:100px 0;border-top:1px solid var(--border3);}
+.gallery-header{
+  display:flex;justify-content:space-between;align-items:flex-end;
+  margin-bottom:40px;flex-wrap:wrap;gap:16px;
+}
+.view-all-link{
+  font-size:.82rem;color:var(--blue2);text-decoration:none;
+  display:flex;align-items:center;gap:6px;transition:gap .2s;
+}
+.view-all-link:hover{gap:10px;}
+
+.nft-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:20px;
+}
+@media(max-width:900px){.nft-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:500px){.nft-grid{grid-template-columns:repeat(2,1fr);gap:12px;}}
+
+.nft-card{
+  border-radius:20px;overflow:hidden;
+  border:1px solid var(--border3);
+  background:var(--surface);
+  transition:all .3s cubic-bezier(.4,0,.2,1);
+  cursor:pointer;position:relative;
+  group:hover;
+}
+.nft-card::before{
+  content:'';
+  position:absolute;inset:0;border-radius:20px;
+  background:linear-gradient(135deg,rgba(59,130,246,.1),rgba(139,92,246,.1));
+  opacity:0;transition:opacity .3s;z-index:0;
+}
+.nft-card:hover{
+  transform:translateY(-8px);
+  border-color:var(--border2);
+  box-shadow:0 20px 60px rgba(0,0,0,0.5),0 0 30px rgba(59,130,246,0.12);
+}
+.nft-card:hover::before{opacity:1;}
+
+.nft-img-wrap{
+  width:100%;aspect-ratio:1;
+  position:relative;overflow:hidden;
+  background:var(--bg3);
+}
+.nft-img-wrap img{
+  width:100%;height:100%;object-fit:cover;
+  transition:transform .4s cubic-bezier(.4,0,.2,1);
+  position:relative;z-index:1;
+}
+.nft-card:hover .nft-img-wrap img{transform:scale(1.08);}
+
+.nft-overlay{
+  position:absolute;inset:0;z-index:2;
+  background:linear-gradient(to top,rgba(5,8,22,.9) 0%,transparent 60%);
+  opacity:0;transition:opacity .3s;
+  display:flex;align-items:flex-end;padding:16px;
+}
+.nft-card:hover .nft-overlay{opacity:1;}
+.nft-overlay-btn{
+  width:100%;padding:10px;border-radius:10px;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  color:#fff;font-size:.78rem;font-weight:700;
+  border:none;cursor:pointer;font-family:var(--font);
+  transition:all .2s;
+}
+
+.rarity-badge{
+  position:absolute;top:10px;right:10px;z-index:3;
+  padding:4px 10px;border-radius:100px;
+  font-size:.6rem;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;
+  backdrop-filter:blur(8px);
+}
+.rarity-legendary{background:rgba(245,158,11,.2);color:var(--gold2);border:1px solid rgba(245,158,11,.3);}
+.rarity-epic{background:rgba(139,92,246,.2);color:var(--purple2);border:1px solid rgba(139,92,246,.3);}
+.rarity-rare{background:rgba(59,130,246,.2);color:var(--blue2);border:1px solid rgba(59,130,246,.3);}
+.rarity-common{background:rgba(100,116,139,.15);color:var(--muted2);border:1px solid rgba(100,116,139,.2);}
+
+.nft-body{padding:14px 16px;position:relative;z-index:1;}
+.nft-name{font-size:.9rem;font-weight:600;color:var(--white);margin-bottom:8px;}
+.nft-meta{display:flex;justify-content:space-between;align-items:center;}
+.nft-price{font-family:var(--mono);font-size:.8rem;font-weight:700;color:var(--gold2);}
+.nft-id{font-size:.68rem;color:var(--muted);}
+
+/* ── MINT SECTION ── */
+.mint-section{
+  padding:100px 0;
+  border-top:1px solid var(--border3);
+  position:relative;
+}
+.mint-section::before{
+  content:'';
+  position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:600px;height:600px;
+  background:radial-gradient(circle,rgba(139,92,246,.06) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+.mint-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:60px;align-items:start;
+}
+@media(max-width:820px){.mint-grid{grid-template-columns:1fr;}}
+
+/* Mint info left */
+.mint-info{}
+.mint-info-title{
+  font-size:2rem;font-weight:700;color:var(--white);
+  margin-bottom:12px;letter-spacing:-.02em;
+}
+.mint-info-desc{font-size:.88rem;color:var(--muted2);line-height:1.8;margin-bottom:32px;}
+
+.mint-details-list{}
+.mdl-item{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 0;border-bottom:1px solid var(--border3);
+  font-size:.85rem;
+}
+.mdl-item:last-child{border:none;}
+.mdl-key{color:var(--muted2);display:flex;align-items:center;gap:8px;}
+.mdl-key-icon{font-size:.9rem;}
+.mdl-val{color:var(--white);font-weight:600;}
+.mdl-val.accent{color:var(--blue2);}
+.mdl-val.gold{color:var(--gold2);}
+
+.mint-benefits{
+  margin-top:28px;
+  background:rgba(255,255,255,.02);
+  border:1px solid var(--border3);
+  border-radius:16px;padding:20px;
+}
+.mb-title{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
+.mb-list{list-style:none;}
+.mb-list li{
+  font-size:.82rem;color:var(--muted2);
+  padding:6px 0;display:flex;align-items:center;gap:10px;
+}
+.mb-check{color:var(--success);font-weight:700;flex-shrink:0;}
+
+/* Mint card right */
+.mint-card{
+  background:linear-gradient(135deg,var(--surface),var(--bg3));
+  border:1px solid var(--border2);
+  border-radius:24px;padding:32px;
+  position:relative;overflow:hidden;
+  box-shadow:
+    0 24px 80px rgba(0,0,0,0.5),
+    0 0 0 1px rgba(255,255,255,.03) inset,
+    0 0 60px rgba(59,130,246,.06);
+}
+.mint-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--blue),var(--purple),var(--cyan),var(--blue));
+  background-size:300%;animation:gradFlow 4s linear infinite;
+}
+.mint-card::after{
+  content:'';
+  position:absolute;top:-50%;right:-50%;
+  width:300px;height:300px;
+  background:radial-gradient(circle,rgba(139,92,246,.06) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+.mc-header{margin-bottom:24px;}
+.mc-collection{
+  display:flex;align-items:center;gap:12px;margin-bottom:12px;
+}
+.mc-collection-img{
+  width:48px;height:48px;border-radius:12px;overflow:hidden;
+  border:1px solid var(--border2);
+}
+.mc-collection-img img{width:100%;height:100%;object-fit:cover;}
+.mc-collection-name{font-size:1.2rem;font-weight:700;color:var(--white);}
+.mc-collection-sub{font-size:.72rem;color:var(--muted);margin-top:2px;}
+.verified-badge{
+  margin-left:auto;
+  display:flex;align-items:center;gap:5px;
+  font-size:.65rem;font-weight:600;letter-spacing:.06em;
+  color:var(--blue2);
+  background:rgba(96,165,250,.08);
+  border:1px solid rgba(96,165,250,.2);
+  padding:4px 10px;border-radius:100px;
+}
+
+/* Sale status */
+.sale-pill{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:.72rem;font-weight:600;
+  padding:6px 14px;border-radius:100px;margin-bottom:20px;
+}
+.sp-live{background:rgba(34,197,94,.08);color:var(--success);border:1px solid rgba(34,197,94,.18);}
+.sp-off{background:rgba(245,158,11,.07);color:var(--gold);border:1px solid rgba(245,158,11,.18);}
+.sp-none{background:rgba(100,116,139,.07);color:var(--muted2);border:1px solid rgba(100,116,139,.15);}
+.sp-dot{width:7px;height:7px;border-radius:50%;background:currentColor;animation:pulse 2s infinite;}
+
+/* Stats */
+.mc-stats{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:1px;background:rgba(255,255,255,.04);
+  border:1px solid var(--border3);border-radius:14px;
+  overflow:hidden;margin-bottom:20px;
+}
+.mcs{background:var(--bg3);padding:14px 10px;text-align:center;}
+.mcs-val{
+  display:block;
+  font-family:var(--mono);font-size:1.05rem;font-weight:700;
+  color:var(--white);margin-bottom:3px;
+}
+.mcs-key{font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+
+/* Progress */
+.mc-prog{margin-bottom:20px;}
+.mc-prog-top{display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);margin-bottom:8px;}
+.mc-prog-track{
+  height:6px;background:rgba(255,255,255,.06);
+  border-radius:100px;overflow:visible;position:relative;
+}
+.mc-prog-fill{
+  height:100%;border-radius:100px;
+  background:linear-gradient(90deg,var(--blue),var(--purple));
+  transition:width 1.2s cubic-bezier(.4,0,.2,1);
+}
+.mc-prog-fill::after{
+  content:'';position:absolute;right:-2px;top:50%;
+  transform:translateY(-50%);
+  width:12px;height:12px;border-radius:50%;
+  background:var(--purple2);
+  box-shadow:0 0 12px var(--purple2);
+}
+
+/* Qty */
+.field-label{
+  display:block;font-size:.65rem;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:10px;
+}
+.qty-ctrl{display:flex;margin-bottom:16px;}
+.qbtn{
+  width:52px;height:54px;
+  background:var(--bg3);border:1px solid var(--border2);
+  color:var(--text);font-size:1.4rem;cursor:pointer;
+  transition:all .18s;font-family:inherit;
+}
+.qbtn:first-child{border-radius:12px 0 0 12px;}
+.qbtn:last-child{border-radius:0 12px 12px 0;}
+.qbtn:hover:not(:disabled){
+  background:rgba(99,179,237,.12);color:var(--blue2);
+  border-color:var(--blue2);
+}
+.qbtn:disabled{opacity:.3;cursor:not-allowed;}
+.qty-display{
+  flex:1;height:54px;
+  background:rgba(255,255,255,.03);
+  border-top:1px solid var(--border2);border-bottom:1px solid var(--border2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.qty-num{font-family:var(--mono);font-size:1.5rem;font-weight:700;color:var(--white);line-height:1;}
+.qty-sub{font-size:.52rem;color:var(--muted);margin-top:2px;}
+
+/* Cost */
+.cost-card{
+  background:rgba(255,255,255,.02);
+  border:1px solid var(--border3);
+  border-radius:14px;padding:14px 16px;margin-bottom:16px;
+}
+.cost-row{
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:.82rem;padding:6px 0;
+  border-bottom:1px solid rgba(255,255,255,.04);
+}
+.cost-row:last-child{border:none;}
+.ck{color:var(--muted2);}
+.cv{color:var(--text);}
+.cost-total{padding-top:10px !important;}
+.cost-total .ck{font-weight:600;color:var(--text);}
+.cost-total .cv{
+  font-family:var(--mono);font-size:.95rem;font-weight:700;
+  color:var(--gold2) !important;
+}
+
+/* Error / Success */
+.msg-err{
+  display:flex;align-items:flex-start;gap:10px;
+  background:rgba(244,63,94,.07);border:1px solid rgba(244,63,94,.18);
+  border-radius:12px;padding:13px 15px;font-size:.78rem;
+  color:var(--error);margin-bottom:14px;
+  animation:slideIn .3s ease;
+}
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.err-ico{flex-shrink:0;margin-top:1px;font-size:1rem;}
+.err-dis{background:none;border:none;color:var(--error);opacity:.5;cursor:pointer;margin-left:auto;font-size:.85rem;}
+.err-dis:hover{opacity:1;}
+
+.msg-ok{
+  text-align:center;padding:28px 16px;
+  background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.15);
+  border-radius:16px;margin-bottom:14px;
+  animation:popIn .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
+.ok-emoji{font-size:3rem;margin-bottom:12px;animation:bounce .6s cubic-bezier(.34,1.56,.64,1);}
+@keyframes bounce{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
+.ok-title{font-size:1.1rem;font-weight:700;color:var(--white);margin-bottom:6px;}
+.ok-sub{font-size:.78rem;color:var(--success);margin-bottom:14px;}
+.ok-tx{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:.72rem;color:var(--blue2);margin-bottom:14px;
+  text-decoration:none;
+}
+.ok-tx:hover{text-decoration:underline;}
+.ok-again{
+  background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);
+  color:var(--success);padding:9px 22px;border-radius:10px;
+  font-size:.8rem;font-weight:600;cursor:pointer;font-family:var(--font);
+  transition:all .2s;
+}
+.ok-again:hover{background:rgba(34,197,94,.2);}
+
+/* Mint CTA */
+.mint-cta{
+  width:100%;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  color:#fff;font-family:var(--font);
+  font-size:1rem;font-weight:700;
+  padding:18px;border-radius:14px;border:none;cursor:pointer;
+  transition:all .25s;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  box-shadow:0 4px 30px rgba(59,130,246,0.3),0 0 0 1px rgba(255,255,255,.06) inset;
+  position:relative;overflow:hidden;
+}
+.mint-cta::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.12),transparent);
+  opacity:0;transition:opacity .2s;
+}
+.mint-cta:hover::before{opacity:1;}
+.mint-cta:hover:not(:disabled){
+  transform:translateY(-2px);
+  box-shadow:0 8px 40px rgba(59,130,246,0.5);
+}
+.mint-cta:disabled{
+  background:var(--surface);color:var(--muted);
+  cursor:not-allowed;box-shadow:none;
+  border:1px solid var(--border3);
+}
+.mint-cta:disabled::before{display:none;}
+.spin{
+  width:18px;height:18px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.3);border-top-color:#fff;
+  animation:spin .7s linear infinite;flex-shrink:0;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.mc-note{
+  font-size:.62rem;color:var(--muted);text-align:center;
+  margin-top:12px;line-height:1.8;
+}
+.mc-note a{color:var(--blue2);}
+
+/* ── ROADMAP ── */
+.roadmap-section{padding:100px 0;border-top:1px solid var(--border3);}
+.roadmap-grid{
+  display:grid;grid-template-columns:repeat(5,1fr);
+  gap:16px;margin-top:48px;
+}
+@media(max-width:1000px){.roadmap-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:500px){.roadmap-grid{grid-template-columns:1fr;}}
+
+.roadmap-card{
+  background:var(--surface);
+  border:1px solid var(--border3);
+  border-radius:20px;padding:24px 20px;
+  position:relative;overflow:hidden;
+  transition:all .3s;
+}
+.roadmap-card:hover{
+  border-color:var(--border2);
+  transform:translateY(-4px);
+  box-shadow:0 16px 40px rgba(0,0,0,0.4);
+}
+.roadmap-card.active{
+  border-color:rgba(59,130,246,.35);
+  background:linear-gradient(135deg,rgba(59,130,246,.06),var(--surface));
+}
+.roadmap-card.active::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--blue),var(--purple));
+}
+.rc-phase{font-size:.6rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--blue2);margin-bottom:10px;}
+.rc-status{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:.6rem;font-weight:600;padding:3px 9px;
+  border-radius:100px;margin-bottom:14px;
+}
+.rcs-active{background:rgba(34,197,94,.1);color:var(--success);border:1px solid rgba(34,197,94,.2);}
+.rcs-upcoming{background:rgba(59,130,246,.1);color:var(--blue2);border:1px solid rgba(59,130,246,.2);}
+.rcs-future{background:rgba(100,116,139,.08);color:var(--muted2);border:1px solid rgba(100,116,139,.15);}
+.rc-title{font-size:1rem;font-weight:700;color:var(--white);margin-bottom:12px;}
+.rc-items{list-style:none;}
+.rc-items li{
+  font-size:.75rem;color:var(--muted2);padding:4px 0;
+  display:flex;align-items:flex-start;gap:7px;
+}
+.rc-bullet{color:var(--blue2);flex-shrink:0;margin-top:1px;}
+
+/* ── STATS / TRUST ── */
+.trust-section{padding:80px 0;border-top:1px solid var(--border3);}
+.trust-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:1px;background:var(--border3);
+  border:1px solid var(--border3);border-radius:20px;
+  overflow:hidden;
+}
+@media(max-width:700px){.trust-grid{grid-template-columns:repeat(2,1fr);}}
+.trust-cell{
+  background:var(--surface);padding:32px 24px;text-align:center;
+  transition:background .2s;
+}
+.trust-cell:hover{background:var(--surface2);}
+.trust-icon{font-size:1.8rem;margin-bottom:12px;}
+.trust-val{
+  font-family:var(--mono);font-size:1.8rem;font-weight:700;
+  margin-bottom:6px;
+  background:linear-gradient(135deg,var(--blue2),var(--purple2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.trust-key{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+
+/* ── FAQ ── */
+.faq-section{padding:100px 0;border-top:1px solid var(--border3);}
+.faq-inner{max-width:760px;margin:0 auto;}
+.faq-list{margin-top:48px;}
+.faq-item{
+  border:1px solid var(--border3);
+  border-radius:14px;margin-bottom:10px;
+  overflow:hidden;transition:border-color .2s;
+}
+.faq-item.open{border-color:rgba(99,179,237,.25);}
+.faq-q{
+  display:flex;justify-content:space-between;align-items:center;
+  width:100%;padding:18px 22px;
+  font-size:.9rem;font-weight:600;color:var(--text);
+  text-align:left;gap:16px;cursor:pointer;
+  background:none;border:none;font-family:var(--font);
+  transition:color .2s;
+}
+.faq-q:hover{color:var(--white);}
+.faq-icon{
+  width:28px;height:28px;border-radius:8px;flex-shrink:0;
+  background:rgba(255,255,255,.05);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;color:var(--blue2);transition:all .2s;
+}
+.faq-item.open .faq-icon{background:rgba(99,179,237,.1);transform:rotate(45deg);}
+.faq-a{
+  padding:0 22px 18px;
+  font-size:.83rem;color:var(--muted2);line-height:1.8;
+  border-top:1px solid var(--border3);padding-top:14px;
+}
+
+/* ── CONTRACT SECTION ── */
+.contract-section{padding:80px 0;border-top:1px solid var(--border3);}
+.contract-card{
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:20px;padding:32px;
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  gap:32px;
+}
+@media(max-width:700px){.contract-card{grid-template-columns:1fr;}}
+.cc-item{}
+.cc-label{
+  font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:8px;
+}
+.cc-value{
+  font-family:var(--mono);font-size:.78rem;color:var(--blue2);
+  word-break:break-all;line-height:1.6;
+}
+.cc-value a{color:var(--blue2);text-decoration:none;}
+.cc-value a:hover{text-decoration:underline;}
+.cc-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:.68rem;font-weight:600;
+  background:rgba(34,197,94,.08);
+  border:1px solid rgba(34,197,94,.2);
+  color:var(--success);
+  padding:4px 12px;border-radius:100px;
+  margin-top:8px;
+}
+
+/* ── FOOTER ── */
+.site-footer{
+  border-top:1px solid var(--border3);
+  padding:60px 0 40px;
+}
+.footer-grid{
+  display:grid;grid-template-columns:2fr 1fr 1fr;
+  gap:48px;margin-bottom:48px;
+}
+@media(max-width:700px){.footer-grid{grid-template-columns:1fr;gap:32px;}}
+.footer-brand{}
+.footer-logo{
+  display:flex;align-items:center;gap:10px;margin-bottom:14px;
+}
+.footer-logo-img{width:36px;height:36px;border-radius:9px;overflow:hidden;}
+.footer-logo-img img{width:100%;height:100%;object-fit:cover;}
+.footer-logo-text{font-family:var(--mono);font-size:1.1rem;font-weight:700;color:var(--white);}
+.footer-desc{font-size:.8rem;color:var(--muted);line-height:1.75;max-width:280px;margin-bottom:20px;}
+.footer-socials{display:flex;gap:10px;}
+.social-btn{
+  width:36px;height:36px;border-radius:9px;
+  background:rgba(255,255,255,.05);border:1px solid var(--border3);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--muted2);font-size:.85rem;text-decoration:none;
+  transition:all .2s;
+}
+.social-btn:hover{background:rgba(99,179,237,.08);border-color:var(--border2);color:var(--blue2);}
+.footer-col h4{font-size:.8rem;font-weight:700;color:var(--white);margin-bottom:16px;letter-spacing:.04em;}
+.footer-col a{
+  display:block;font-size:.78rem;color:var(--muted);
+  text-decoration:none;margin-bottom:10px;transition:color .2s;
+}
+.footer-col a:hover{color:var(--white);}
+.footer-bottom{
+  border-top:1px solid var(--border3);padding-top:24px;
+  display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
+  font-size:.7rem;color:var(--muted);
+}
+
+/* ── TOAST ── */
+#toast{
+  position:fixed;bottom:28px;right:28px;
+  background:linear-gradient(135deg,var(--surface),var(--bg3));
+  border:1px solid var(--border2);
+  border-left:3px solid var(--blue);
+  padding:14px 18px;font-size:.8rem;font-weight:500;
+  border-radius:14px;max-width:340px;z-index:9999;
+  transform:translateY(120px);opacity:0;
+  transition:all .4s cubic-bezier(.34,1.56,.64,1);
+  pointer-events:none;
+  box-shadow:0 16px 50px rgba(0,0,0,0.5);
+  display:flex;align-items:center;gap:10px;
+}
+#toast.show{transform:translateY(0);opacity:1;}
+#toast.ok{border-left-color:var(--success);}
+#toast.err{border-left-color:var(--error);}
+#toast.gold{border-left-color:var(--gold2);}
+.toast-ico{font-size:1.1rem;flex-shrink:0;}
+
+/* ── TIER SELECTOR ── */
+.tier-selector-label{
+  font-size:.65rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--muted);margin-bottom:10px;display:block;
+}
+.tier-selector{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;
+}
+.tier-opt{
+  padding:10px 6px;border-radius:12px;border:1px solid var(--border2);
+  background:rgba(255,255,255,0.02);cursor:pointer;text-align:center;
+  transition:all .2s;position:relative;overflow:hidden;
+}
+.tier-opt:hover{background:rgba(255,255,255,0.05);transform:translateY(-1px);}
+.tier-opt.selected{transform:translateY(-2px);}
+.tier-opt-name{
+  font-family:var(--mono);font-size:.72rem;font-weight:700;
+  display:block;margin-bottom:4px;
+}
+.tier-opt-price{
+  font-size:.65rem;color:var(--muted2);display:block;margin-bottom:5px;
+}
+.tier-opt-supply{
+  font-size:.55rem;color:var(--muted);display:block;letter-spacing:.04em;
+}
+.tier-opt-check{
+  position:absolute;top:5px;right:5px;width:14px;height:14px;
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:.55rem;opacity:0;transition:opacity .2s;
+}
+.tier-opt.selected .tier-opt-check{opacity:1;}
+.fade-up{
+  opacity:0;transform:translateY(30px);
+  transition:all .7s cubic-bezier(.4,0,.2,1);
+}
+.fade-up.visible{opacity:1;transform:none;}
+
+/* ── STORY SECTION ── */
+.story-section{padding:100px 0;border-top:1px solid var(--border3);position:relative;}
+.story-section::before{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:800px;height:400px;
+  background:radial-gradient(ellipse,rgba(59,130,246,0.05) 0%,transparent 70%);
+  pointer-events:none;
+}
+.story-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start;}
+@media(max-width:820px){.story-grid{grid-template-columns:1fr;gap:40px;}}
+.story-prose{font-size:.93rem;color:var(--muted2);line-height:1.9;font-weight:300;margin-bottom:20px;}
+.story-prose em{font-style:italic;color:var(--text);}
+.story-bynum{background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.15);border-radius:14px;padding:22px;margin-bottom:22px;}
+.story-bynum-title{font-size:.6rem;text-transform:uppercase;letter-spacing:.14em;color:var(--gold);margin-bottom:12px;font-weight:700;}
+.story-bynum-row{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:.83rem;}
+.story-bynum-row:last-child{border:none;}
+.story-bynum-val{font-family:var(--mono);font-weight:700;color:var(--gold2);}
+.story-bynum-lbl{color:var(--muted);}
+.story-quote{font-size:.84rem;font-style:italic;color:rgba(255,255,255,0.32);border-left:2px solid rgba(59,130,246,0.3);padding-left:14px;line-height:1.75;}
+.story-quote cite{display:block;margin-top:7px;font-style:normal;font-size:.74rem;color:var(--muted);}
+
+/* Price value panel */
+.price-value-panel{
+  margin-top:56px;padding:40px;
+  border-radius:20px;
+  background:linear-gradient(135deg,rgba(59,130,246,0.05),rgba(139,92,246,0.05));
+  border:1px solid var(--border2);
+  text-align:center;position:relative;overflow:hidden;
+}
+.price-value-panel::before{
+  content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;
+  background:radial-gradient(circle,rgba(245,158,11,0.07),transparent);
+  filter:blur(40px);pointer-events:none;
+}
+.pvp-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.15em;color:var(--muted);margin-bottom:12px;}
+.pvp-body{font-size:clamp(.88rem,1.8vw,1.05rem);color:var(--muted2);line-height:1.85;max-width:560px;margin:0 auto 26px;font-weight:300;}
+.pvp-nums{display:inline-flex;align-items:center;gap:24px;flex-wrap:wrap;justify-content:center;}
+.pvp-main{font-family:var(--mono);font-size:2.2rem;font-weight:700;
+  background:linear-gradient(90deg,var(--gold),var(--gold2),var(--gold));
+  background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;animation:shimmerGold 3s linear infinite;}
+@keyframes shimmerGold{0%{background-position:200% center}100%{background-position:-200% center}}
+.pvp-main-lbl{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-top:4px;}
+.pvp-divider{width:1px;height:52px;background:rgba(255,255,255,0.07);}
+.pvp-floor{text-align:left;}
+.pvp-floor-val{font-family:var(--mono);font-size:1.2rem;font-weight:700;color:var(--gold2);}
+.pvp-floor-lbl{font-size:.66rem;color:var(--muted);margin-top:3px;}
+.pvp-footnote{margin-top:18px;font-size:.74rem;color:var(--muted);font-style:italic;}
+
+/* ── TRAIT BREAKDOWN ── */
+.traits-section{padding:100px 0;border-top:1px solid var(--border3);position:relative;}
+.traits-section::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 70% 50% at 50% 50%,rgba(139,92,246,0.04),transparent);
+  pointer-events:none;
+}
+.tier-tabs{display:flex;gap:8px;margin-bottom:36px;flex-wrap:wrap;}
+.tier-tab{
+  padding:8px 20px;border-radius:10px;font-size:.78rem;font-weight:600;
+  cursor:pointer;border:1px solid var(--border2);background:transparent;
+  color:var(--muted2);font-family:var(--font);transition:all .2s;
+}
+.tier-tab.active{background:rgba(59,130,246,0.1);border-color:rgba(59,130,246,0.4);color:var(--blue2);}
+.tier-detail-grid{display:grid;grid-template-columns:300px 1fr;gap:40px;align-items:start;}
+@media(max-width:820px){.tier-detail-grid{grid-template-columns:1fr;}}
+.tier-canvas-wrap{border-radius:20px;overflow:hidden;border:1px solid var(--border2);
+  box-shadow:0 0 50px rgba(59,130,246,0.1);}
+.tier-stats-row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;}
+.tier-stat-pill{flex:1;min-width:80px;padding:9px 12px;border-radius:10px;text-align:center;
+  background:rgba(255,255,255,0.02);border:1px solid var(--border3);}
+.tier-stat-val{font-family:var(--mono);font-size:.95rem;font-weight:700;display:block;}
+.tier-stat-lbl{font-size:.55rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-top:2px;display:block;}
+.tier-info-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.tier-badge{padding:4px 12px;border-radius:100px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;}
+.tier-desc{font-size:.88rem;color:var(--muted2);line-height:1.8;font-weight:300;margin-bottom:20px;}
+.trait-list-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:8px;font-weight:700;}
+.trait-chips{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.trait-chip{display:flex;align-items:flex-start;gap:7px;padding:9px 11px;
+  border-radius:9px;background:rgba(255,255,255,0.02);border:1px solid var(--border3);font-size:.77rem;color:var(--muted2);line-height:1.4;}
+.trait-chip-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.scarcity-box{margin-top:16px;padding:12px 15px;border-radius:10px;background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.2);}
+.scarcity-box-title{font-size:.66rem;color:var(--gold);font-weight:700;margin-bottom:5px;}
+.scarcity-box-body{font-size:.76rem;color:var(--muted2);line-height:1.6;}
+.rarity-compare-table{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:48px;}
+.rarity-compare-table th{padding:10px 16px;text-align:left;font-size:.6rem;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border3);}
+.rarity-compare-table td{padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.03);color:var(--muted2);}
+.rarity-compare-table tr:hover td{background:rgba(255,255,255,0.015);}
+.rc-mult{padding:2px 9px;border-radius:100px;font-size:.66rem;font-weight:700;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){
+  .navbar .nav-links{display:none;}
+  .fc1,.fc2,.fc3{display:none;}
+  #toast{left:16px;right:16px;bottom:16px;max-width:none;}
+  .hero-quick-stats{flex-wrap:wrap;}
+  .hqs{min-width:120px;}
+}
+</style>
+</head>
+<body>
+
+<!-- PARTICLES CANVAS -->
+<canvas id="particles"></canvas>
+<div class="bg-layer"></div>
+
+<!-- TOAST -->
+<div id="toast">
+  <span class="toast-ico" id="toastIco">ℹ</span>
+  <span id="toastMsg">Hello</span>
+</div>
+
+<!-- WALLET MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-bar"></div>
+    <div class="modal-head">
+      <span class="modal-title">Connect Wallet</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <p class="modal-sub">Connect to mint BIRBX NFTs on Base Mainnet</p>
+    <div class="wallet-list">
+      <div class="wopt" onclick="connectWith('metamask')">
+        <div class="wopt-icon"><img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="" onerror="this.parentElement.textContent='🦊'"/></div>
+        <div><div class="wopt-name">MetaMask</div><div class="wopt-sub">Most popular Web3 wallet</div></div>
+        <span class="wopt-arr">›</span>
+      </div>
+      <div class="wopt" onclick="connectWith('coinbase')">
+        <div class="wopt-icon"><img src="https://altcoinsbox.com/wp-content/uploads/2023/01/coinbase-wallet-logo.webp" alt="" onerror="this.parentElement.textContent='🔵'"/></div>
+        <div><div class="wopt-name">Coinbase Wallet</div><div class="wopt-sub">Self-custody by Coinbase</div></div>
+        <span class="wopt-arr">›</span>
+      </div>
+      <div class="wopt" onclick="connectWith('trust')">
+        <div class="wopt-icon"><img src="https://altcoinsbox.com/wp-content/uploads/2023/01/trust-wallet-logo.webp" alt="" onerror="this.parentElement.textContent='🛡️'"/></div>
+        <div><div class="wopt-name">Trust Wallet</div><div class="wopt-sub">Open in Trust Wallet browser</div></div>
+        <span class="wopt-arr">›</span>
+      </div>
+      <div class="wopt" onclick="connectWith('okx')">
+        <div class="wopt-icon"><img src="https://altcoinsbox.com/wp-content/uploads/2023/01/okx-wallet-logo.png" alt="" onerror="this.parentElement.textContent='⭕'"/></div>
+        <div><div class="wopt-name">OKX Wallet</div><div class="wopt-sub">Multi-chain DeFi wallet</div></div>
+        <span class="wopt-arr">›</span>
+      </div>
+      <div class="wopt" onclick="connectWith('injected')">
+        <div class="wopt-icon" style="font-size:1.3rem;">👛</div>
+        <div><div class="wopt-name">Other Wallet</div><div class="wopt-sub">Any EVM-compatible wallet</div></div>
+        <span class="wopt-arr">›</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <div class="logo-img">
+        <img src="https://images.unsplash.com/photo-1634973357973-f2ed2657db3c?w=80&q=80" alt="BIRBX" onerror="this.style.display='none'"/>
+      </div>
+      <span class="logo-text">BIRB<span>X</span></span>
+    </a>
+    <div class="nav-links">
+      <a href="#collection">Collection</a>
+      <a href="#traits">Traits</a>
+      <a href="#mint">Mint</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <div class="nav-right">
+      <div class="nav-badge" id="navBadge">
+        <div class="nb-dot"></div>
+        <span id="navNet">Base</span>
+      </div>
+      <button id="walletBtn" onclick="openModal()">Connect Wallet</button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="hero-live-badge">
+        <div class="live-pulse"></div>
+        Live on Base Mainnet
+      </div>
+      <h1 class="hero-title">
+        The Most<br>
+        <span class="hero-title-grad">Legendary</span><br>
+        NFT Drop
+      </h1>
+      <p class="hero-desc">
+        BIRBX is a collection of 10,000 generative masterworks — three years in the making, permanently on Base. More than art. A provenance-backed digital asset valued by collectors in 60+ countries.
+      </p>
+
+      <div class="hero-quick-stats">
+        <div class="hqs">
+          <div class="hqs-val" id="heroTotalSupply">6,000</div>
+          <div class="hqs-key">Total Supply</div>
+        </div>
+        <div class="hqs">
+          <div class="hqs-val" id="heroMinted">0</div>
+          <div class="hqs-key">Minted</div>
+        </div>
+        <div class="hqs">
+          <div class="hqs-val">From $1</div>
+          <div class="hqs-key">Mint Price</div>
+        </div>
+        <div class="hqs">
+          <div class="hqs-val" id="heroLeft">10,000</div>
+          <div class="hqs-key">Remaining</div>
+        </div>
+      </div>
+
+      <div class="hero-btns">
+        <a href="#mint" class="btn-hero-primary">
+          ⚡ Mint Now
+        </a>
+        <a id="basescanLink" href="https://basescan.org/address/0x545dade39b1877f7f59e6a9e68f562bbc33a0b99" target="_blank" class="btn-hero-secondary">
+          View Contract ↗
+        </a>
+      </div>
+
+      <div class="hero-trust">
+        <div class="htrust-item">⛓ Base Network</div>
+        <div class="htrust-sep"></div>
+        <div class="htrust-item">⚡ ERC-721</div>
+        <div class="htrust-sep"></div>
+        <div class="htrust-item">🔒 Verified Contract</div>
+        <div class="htrust-sep"></div>
+        <div class="htrust-item">✨ 10K Supply</div>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <div class="hero-showcase">
+        <div class="showcase-main">
+          <div class="showcase-img" id="hero-showcase-art" style="display:flex;align-items:center;justify-content:center;background:var(--bg3);">
+          </div>
+          <div class="showcase-footer">
+            <div>
+              <div class="sf-name">BIRBX #0001</div>
+              <div class="sf-id">Genesis · Legendary</div>
+            </div>
+            <div class="sf-right">
+              <div class="sf-price-label">Mint Price</div>
+              <div class="sf-price">$5 USD</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating cards -->
+        <div class="float-card fc1" id="float-art-1">
+          <div class="float-card-img" id="float-img-1"></div>
+          <div class="float-card-body">
+            <span class="fc-name">#0042</span>
+            <span class="fc-price">$3 Epic</span>
+          </div>
+        </div>
+        <div class="float-card fc2" id="float-art-2">
+          <div class="float-card-img" id="float-img-2"></div>
+          <div class="float-card-body">
+            <span class="fc-name">#0137</span>
+            <span class="fc-price">$2 Rare</span>
+          </div>
+        </div>
+        <div class="float-card fc3" id="float-art-3">
+          <div class="float-card-img" id="float-img-3"></div>
+          <div class="float-card-body">
+            <span class="fc-name">#0256</span>
+            <span class="fc-price">$1 Common</span>
+          </div>
+        </div>
+
+        <!-- Ticker -->
+        <div class="mint-ticker">
+          <div class="ticker-dot"></div>
+          <div class="ticker-text" id="tickerText">
+            🎉 0xAb3f minted BIRBX #0001 &nbsp;·&nbsp; 🔥 0xCd9e minted BIRBX #0002 &nbsp;·&nbsp; ✨ 0xEf1a minted BIRBX #0003 &nbsp;·&nbsp; 💎 0x2b4c minted BIRBX #0004 &nbsp;·&nbsp; 🎉 0xAb3f minted BIRBX #0001 &nbsp;·&nbsp; 🔥 0xCd9e minted BIRBX #0002
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROGRESS BAR -->
+<div class="progress-section">
+  <div class="progress-inner">
+    <div class="prog-top">
+      <span class="prog-label">Mint Progress</span>
+      <span class="prog-nums"><span id="progMinted">0</span> / 10,000 minted · <span id="progPct">0.0</span>% sold</span>
+    </div>
+    <div class="prog-track">
+      <div class="prog-fill" id="progFill" style="width:0%"></div>
+    </div>
+  </div>
+</div>
+
+<!-- NFT GALLERY -->
+<section class="gallery-section" id="collection">
+  <div class="wrap">
+    <div class="gallery-header fade-up">
+      <div>
+        <div class="section-eyebrow">Collection</div>
+        <h2 class="section-title">Gallery Preview</h2>
+        <p class="section-sub">Each piece rendered at gallery resolution — 4096×4096px on-chain. Live generative preview below.</p>
+      </div>
+      <a id="basescanLink" href="https://basescan.org/address/0x545dade39b1877f7f59e6a9e68f562bbc33a0b99" target="_blank" class="view-all-link">
+        View All on BaseScan →
+      </a>
+    </div>
+    <div class="nft-grid" id="nft-gallery-grid"></div>
+  </div>
+</section>
+
+<!-- STORY SECTION -->
+<section class="story-section">
+  <div class="wrap">
+    <div style="text-align:center;margin-bottom:52px" class="fade-up">
+      <div class="section-eyebrow" style="display:inline-flex">The Origin</div>
+      <h2 class="section-title">Born from <span style="background:linear-gradient(135deg,var(--purple2),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Obsession.</span></h2>
+    </div>
+    <div class="story-grid">
+      <div class="fade-up">
+        <p class="story-prose">It started in a private studio in 2021. A former museum curator and a generative artist sat across a whiteboard covered in questions — <em>not answers.</em> What if fine art carried its own provenance, unforgeably? What if a collector in Lagos held the same verifiable claim as one at Christie's?</p>
+        <p class="story-prose">What followed was <em>three years of quiet work.</em> Eighteen months of generative research. Six months iterating the algorithm against a hand-drawn library of 4,000 source compositions. A private beta with 200 collectors who had never touched a crypto wallet before.</p>
+        <p class="story-prose">The collection launched silently. No marketing. No influencers. Within 72 hours, <em>4,200 pieces were gone</em> — word of mouth through collector circles and one post from a hedge fund manager in Singapore who called it "the first NFT I'd hang on a real wall."</p>
+        <blockquote class="story-quote">"We had 3,157 remaining when we paused for the final audit. By the time we resumed, there were already 400 people in the waitlist. We knew then — this wasn't just ours anymore."<cite>— Kairo Voss, Founder</cite></blockquote>
+      </div>
+      <div class="fade-up" style="transition-delay:.1s">
+        <p class="story-prose">Each of the 10,000 pieces was generated from over <em>200 hand-crafted base traits</em> — no stock assets, no shortcuts. Every background, every layer, every glow effect was drawn and signed off by our art director before entering the generation pool.</p>
+        <div class="story-bynum">
+          <div class="story-bynum-title">By the Numbers</div>
+          <div class="story-bynum-row"><span class="story-bynum-val">18 months</span><span class="story-bynum-lbl">of active art production</span></div>
+          <div class="story-bynum-row"><span class="story-bynum-val">200+</span><span class="story-bynum-lbl">unique base traits drawn by hand</span></div>
+          <div class="story-bynum-row"><span class="story-bynum-val">4,000</span><span class="story-bynum-lbl">source compositions in reference library</span></div>
+          <div class="story-bynum-row"><span class="story-bynum-val">60+ countries</span><span class="story-bynum-lbl">represented in our collector base</span></div>
+        </div>
+        <p class="story-prose" style="font-size:.82rem">Each BIRBX piece was crafted with the precision and intentionality of a physical limited-edition print run. The difference is that yours lives permanently on-chain, verifiably scarce, and transferable to anyone, anywhere, instantly.</p>
+      </div>
+    </div>
+
+    <!-- Price value panel -->
+    <div class="price-value-panel fade-up">
+      <div class="pvp-label">Entry Point</div>
+      <p class="pvp-body">We priced BIRBX not for profit, but to put this collection in the hands of real collectors first. Three years of craft, permanently on Base. The price is accessible. The art is not.</p>
+      <div class="pvp-nums">
+        <div>
+          <div class="pvp-main">From $1 — $5</div>
+          <div class="pvp-main-lbl">Common $1 · Rare $2 · Epic $3 · Legendary $5</div>
+        </div>
+      </div>
+      <div class="pvp-footnote" id="pvp-remain">When this tier closes — it closes permanently.</div>
+    </div>
+  </div>
+</section>
+
+<!-- TRAIT BREAKDOWN -->
+<section class="traits-section" id="traits">
+  <div class="wrap">
+    <div style="text-align:center;margin-bottom:40px" class="fade-up">
+      <div class="section-eyebrow" style="display:inline-flex">Understanding the Art</div>
+      <h2 class="section-title">Rarity <span style="background:linear-gradient(135deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Decoded</span></h2>
+      <p class="section-sub" style="margin:0 auto">Not every piece is equal — and that's the point. Each tier was designed as a distinct visual language, not just a supply number.</p>
+    </div>
+    <div class="tier-tabs fade-up" id="tier-tabs"></div>
+    <div id="tier-detail-wrap" class="fade-up" style="transition-delay:.1s"></div>
+    <div class="fade-up" style="margin-top:52px;transition-delay:.15s">
+      <div style="font-size:.6rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:12px;text-align:center">Full Rarity Overview</div>
+      <div style="background:var(--surface);border:1px solid var(--border3);border-radius:16px;overflow:auto">
+        <table class="rarity-compare-table">
+          <thead><tr><th>Tier</th><th>Supply</th><th>Count</th><th>Traits</th><th>Mint Price</th><th>Staking Mult.</th></tr></thead>
+          <tbody id="rarity-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST STATS -->
+<section class="trust-section">
+  <div class="wrap">
+    <div class="trust-grid fade-up">
+      <div class="trust-cell">
+        <div class="trust-icon">🎨</div>
+        <div class="trust-val">10,000</div>
+        <div class="trust-key">Total Supply</div>
+      </div>
+      <div class="trust-cell">
+        <div class="trust-icon">⚡</div>
+        <div class="trust-val">ERC-721</div>
+        <div class="trust-key">Token Standard</div>
+      </div>
+      <div class="trust-cell">
+        <div class="trust-icon">⛓</div>
+        <div class="trust-val">Base</div>
+        <div class="trust-key">Network</div>
+      </div>
+      <div class="trust-cell">
+        <div class="trust-icon">💎</div>
+        <div class="trust-val">$1–$5</div>
+        <div class="trust-key">Mint Price USD</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MINT SECTION -->
+<section class="mint-section" id="mint">
+  <div class="wrap">
+    <div class="mint-grid">
+      <!-- Left info -->
+      <div class="mint-info fade-up">
+        <div class="section-eyebrow">Mint Now</div>
+        <h2 class="mint-info-title">Get Your BIRBX NFT</h2>
+        <p class="mint-info-desc">
+          Each BIRBX is a unique 1-of-1 generative piece minted directly on Base.
+          Permanent on-chain ownership. Base Network. ERC-721 standard.
+        </p>
+
+        <div class="mint-details-list">
+          <div class="mdl-item">
+            <span class="mdl-key"><span class="mdl-key-icon">🎨</span> Collection</span>
+            <span class="mdl-val">BIRBX</span>
+          </div>
+          <div class="mdl-item">
+            <span class="mdl-key"><span class="mdl-key-icon">📦</span> Total Supply</span>
+            <span class="mdl-val">10,000</span>
+          </div>
+          <div class="mdl-item">
+            <span class="mdl-key"><span class="mdl-key-icon">💰</span> Mint Price</span>
+            <span class="mdl-val gold">Common $1 · Rare $2 · Epic $3 · Legendary $5</span>
+          </div>
+          <div class="mdl-item">
+            <span class="mdl-key"><span class="mdl-key-icon">⛓</span> Network</span>
+            <span class="mdl-val accent">Base Mainnet</span>
+          </div>
+          <div class="mdl-item">
+            <span class="mdl-key"><span class="mdl-key-icon">👛</span> Max Per Wallet</span>
+            <span class="mdl-val">10 NFTs</span>
+          </div>
+          <div class="mdl-item">
+            <span class="mdl-key"><span class="mdl-key-icon">📄</span> Contract</span>
+            <span class="mdl-val accent" style="font-size:.72rem">0x545d…0b99</span>
+          </div>
+        </div>
+
+        <div class="mint-benefits">
+          <div class="mb-title">Holder Benefits</div>
+          <ul class="mb-list">
+            <li><span class="mb-check">✓</span> Permanent on-chain ownership on Base</li>
+            <li><span class="mb-check">✓</span> ERC-721 standard on Base</li>
+            <li><span class="mb-check">✓</span> Exclusive holder community access</li>
+            <li><span class="mb-check">✓</span> Future airdrop eligibility</li>
+            <li><span class="mb-check">✓</span> Governance voting rights</li>
+            <li><span class="mb-check">✓</span> Early access to Season 2</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Mint card -->
+      <div class="mint-card fade-up" style="transition-delay:.1s">
+        <div class="mc-header">
+          <div class="mc-collection">
+            <div class="mc-collection-img" id="mint-card-art"></div>
+            <div>
+              <div class="mc-collection-name">BIRBX</div>
+              <div class="mc-collection-sub">ERC-721 · Base Mainnet</div>
+            </div>
+            <div class="verified-badge">✓ Verified</div>
+          </div>
+        </div>
+
+        <div class="sale-pill sp-none" id="salePill">
+          <span class="sp-dot"></span>
+          <span id="saleText">Connect wallet to load</span>
+        </div>
+
+        <div class="mc-stats">
+          <div class="mcs"><span class="mcs-val" id="sMinted">—</span><span class="mcs-key">Minted</span></div>
+          <div class="mcs"><span class="mcs-val" id="sLeft">—</span><span class="mcs-key">Remaining</span></div>
+          <div class="mcs"><span class="mcs-val">$1–$5</span><span class="mcs-key">Price USD</span></div>
+        </div>
+
+        <div class="mc-prog">
+          <div class="mc-prog-top">
+            <span id="mcProgTxt">0 / 10,000</span>
+            <span id="mcProgPct">0%</span>
+          </div>
+          <div class="mc-prog-track">
+            <div class="mc-prog-fill" id="mcProgFill" style="width:0%"></div>
+          </div>
+        </div>
+
+        <span class="field-label tier-selector-label">Select Tier</span>
+        <div class="tier-selector" id="tierSelector">
+          <div class="tier-opt" data-tier="Legendary" data-cents="500" onclick="selectTier(this)"
+            style="border-color:rgba(245,158,11,0.3)">
+            <span class="tier-opt-name" style="color:#f59e0b">Legendary</span>
+            <span class="tier-opt-price">$5</span>
+            <span class="tier-opt-supply">1% · ~100</span>
+            <div class="tier-opt-check" style="background:#f59e0b;color:#000">✓</div>
+          </div>
+          <div class="tier-opt" data-tier="Epic" data-cents="300" onclick="selectTier(this)"
+            style="border-color:rgba(139,92,246,0.3)">
+            <span class="tier-opt-name" style="color:#8b5cf6">Epic</span>
+            <span class="tier-opt-price">$3</span>
+            <span class="tier-opt-supply">9% · ~900</span>
+            <div class="tier-opt-check" style="background:#8b5cf6;color:#fff">✓</div>
+          </div>
+          <div class="tier-opt" data-tier="Rare" data-cents="200" onclick="selectTier(this)"
+            style="border-color:rgba(59,130,246,0.3)">
+            <span class="tier-opt-name" style="color:#3b82f6">Rare</span>
+            <span class="tier-opt-price">$2</span>
+            <span class="tier-opt-supply">30% · ~3K</span>
+            <div class="tier-opt-check" style="background:#3b82f6;color:#fff">✓</div>
+          </div>
+          <div class="tier-opt selected" data-tier="Common" data-cents="100" onclick="selectTier(this)"
+            style="border-color:rgba(34,211,238,0.5);background:rgba(34,211,238,0.07)">
+            <span class="tier-opt-name" style="color:#22d3ee">Common</span>
+            <span class="tier-opt-price">$1</span>
+            <span class="tier-opt-supply">60% · ~6K</span>
+            <div class="tier-opt-check" style="background:#22d3ee;color:#000">✓</div>
+          </div>
+        </div>
+
+        <span class="field-label">Quantity</span>
+        <div class="qty-ctrl">
+          <button class="qbtn" id="qMinus" onclick="changeQty(-1)" disabled>−</button>
+          <div class="qty-display">
+            <span class="qty-num" id="qNum">1</span>
+            <span class="qty-sub">max 10 per wallet</span>
+          </div>
+          <button class="qbtn" id="qPlus" onclick="changeQty(1)" disabled>+</button>
+        </div>
+
+        <div class="cost-card">
+          <div class="cost-row"><span class="ck">Price per NFT</span><span class="cv" id="priceEthDisplay">Fetching…</span></div>
+          <div class="cost-row"><span class="ck">USD Value</span><span class="cv gold" id="priceUsdDisplay">—</span></div>
+          <div class="cost-row"><span class="ck">ETH/USD Rate</span><span class="cv" id="oraclePriceRate" style="font-size:.72rem;color:var(--muted)">Chainlink oracle</span></div>
+          <div class="cost-row"><span class="ck">Quantity</span><span class="cv" id="cQty">× 1</span></div>
+          <div class="cost-row"><span class="ck">Est. Gas</span><span class="cv" id="cGas">~$0.01</span></div>
+          <div class="cost-row cost-total"><span class="ck">Total</span><span class="cv" id="cTotal">0.000488 ETH</span></div>
+        </div>
+
+        <div class="msg-err" id="msgErr" style="display:none">
+          <span class="err-ico">⚠</span>
+          <span id="msgErrTxt">Error</span>
+          <button class="err-dis" onclick="dismissErr()">✕</button>
+        </div>
+
+        <div class="msg-ok" id="msgOk" style="display:none">
+          <div class="ok-emoji">🎉</div>
+          <div class="ok-title" id="okTitle">Mint Successful!</div>
+          <div class="ok-sub" id="okSub">Your BIRBX NFT is now in your wallet</div>
+          <a id="txLink" href="#" target="_blank" class="ok-tx">View on BaseScan ↗</a><br/>
+          <button class="ok-again" onclick="resetOk()">Mint More</button>
+        </div>
+
+        <button class="mint-cta" id="mintCta" onclick="handleMint()" disabled>
+          <span id="mintCtaTxt">Connect Wallet to Mint</span>
+        </button>
+
+        <p class="mc-note">
+          Gas fees apply · Payments go to treasury · Base Mainnet ·
+          <a id="basescanLink" href="https://basescan.org/address/0x545dade39b1877f7f59e6a9e68f562bbc33a0b99" target="_blank">BaseScan ↗</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section class="roadmap-section" id="roadmap">
+  <div class="wrap">
+    <div class="fade-up" style="text-align:center;margin-bottom:0">
+      <div class="section-eyebrow" style="display:inline-flex">Roadmap</div>
+      <h2 class="section-title">The Journey</h2>
+      <p class="section-sub" style="margin:0 auto">Five phases to build the most iconic NFT community on Base.</p>
+    </div>
+    <div class="roadmap-grid">
+      <div class="roadmap-card active fade-up">
+        <div class="rc-phase">Phase 1</div>
+        <div class="rc-status rcs-active">🟢 In Progress</div>
+        <div class="rc-title">Launch</div>
+        <ul class="rc-items">
+          <li><span class="rc-bullet">→</span>Contract deployment</li>
+          <li><span class="rc-bullet">→</span>Public mint opens</li>
+          <li><span class="rc-bullet">→</span>Community growth</li>
+          <li><span class="rc-bullet">→</span>Community launch</li>
+        </ul>
+      </div>
+      <div class="roadmap-card fade-up" style="transition-delay:.08s">
+        <div class="rc-phase">Phase 2</div>
+        <div class="rc-status rcs-upcoming">🔵 Upcoming</div>
+        <div class="rc-title">Community Growth</div>
+        <ul class="rc-items">
+          <li><span class="rc-bullet">→</span>Trait rarity reveal</li>
+          <li><span class="rc-bullet">→</span>Holder snapshot</li>
+          <li><span class="rc-bullet">→</span>Discord launch</li>
+          <li><span class="rc-bullet">→</span>Collab mints</li>
+        </ul>
+      </div>
+      <div class="roadmap-card fade-up" style="transition-delay:.14s">
+        <div class="rc-phase">Phase 3</div>
+        <div class="rc-status rcs-upcoming">🔵 Upcoming</div>
+        <div class="rc-title">Holder Rewards</div>
+        <ul class="rc-items">
+          <li><span class="rc-bullet">→</span>Staking rewards</li>
+          <li><span class="rc-bullet">→</span>Exclusive merch</li>
+          <li><span class="rc-bullet">→</span>Airdrop to holders</li>
+          <li><span class="rc-bullet">→</span>DAO governance</li>
+        </ul>
+      </div>
+      <div class="roadmap-card fade-up" style="transition-delay:.2s">
+        <div class="rc-phase">Phase 4</div>
+        <div class="rc-status rcs-future">⚪ Future</div>
+        <div class="rc-title">Ecosystem Expansion</div>
+        <ul class="rc-items">
+          <li><span class="rc-bullet">→</span>Cross-chain bridge</li>
+          <li><span class="rc-bullet">→</span>Physical art drops</li>
+          <li><span class="rc-bullet">→</span>IP licensing</li>
+          <li><span class="rc-bullet">→</span>Brand partnerships</li>
+        </ul>
+      </div>
+      <div class="roadmap-card fade-up" style="transition-delay:.26s">
+        <div class="rc-phase">Phase 5</div>
+        <div class="rc-status rcs-future">⚪ Future</div>
+        <div class="rc-title">Long-Term Dev</div>
+        <ul class="rc-items">
+          <li><span class="rc-bullet">→</span>Season 2 drop</li>
+          <li><span class="rc-bullet">→</span>Gaming integration</li>
+          <li><span class="rc-bullet">→</span>Metaverse presence</li>
+          <li><span class="rc-bullet">→</span>Foundation launch</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section" id="faq">
+  <div class="wrap">
+    <div class="faq-inner">
+      <div class="fade-up" style="text-align:center">
+        <div class="section-eyebrow" style="display:inline-flex">FAQ</div>
+        <h2 class="section-title">Common Questions</h2>
+      </div>
+      <div class="faq-list">
+        <div class="faq-item fade-up">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            <span>How much does one BIRBX NFT cost?</span>
+            <div class="faq-icon">+</div>
+          </button>
+          <div class="faq-a" style="display:none">Pricing is tier-based: Common $1 · Rare $2 · Epic $3 · Legendary $5. All payments go directly to the treasury wallet on-chain. No platform fees.</div>
+        </div>
+        <div class="faq-item fade-up" style="transition-delay:.05s">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            <span>How many can I mint per wallet?</span>
+            <div class="faq-icon">+</div>
+          </button>
+          <div class="faq-a" style="display:none">Maximum 10 NFTs per wallet. You can mint up to 10 per transaction. The limit is enforced on-chain by the smart contract.</div>
+        </div>
+        <div class="faq-item fade-up" style="transition-delay:.08s">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            <span>What wallets are supported?</span>
+            <div class="faq-icon">+</div>
+          </button>
+          <div class="faq-a" style="display:none">MetaMask, Coinbase Wallet, Trust Wallet, OKX Wallet, and any EVM-compatible wallet. You must be connected to Base Mainnet (Chain ID 8453).</div>
+        </div>
+        <div class="faq-item fade-up" style="transition-delay:.1s">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            <span>What is Base network and how do I get ETH there?</span>
+            <div class="faq-icon">+</div>
+          </button>
+          <div class="faq-a" style="display:none">Base is an Ethereum Layer 2 network built by Coinbase. It has very low gas fees. Bridge ETH from Ethereum at bridge.base.org, or buy ETH directly on Base via Coinbase.</div>
+        </div>
+        <div class="faq-item fade-up" style="transition-delay:.12s">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            <span>When is the artwork revealed?</span>
+            <div class="faq-icon">+</div>
+          </button>
+          <div class="faq-a" style="display:none">NFTs show a preview image immediately after minting. Full unique artwork reveal happens after sellout or at a scheduled date — announced on our community channels.</div>
+        </div>
+        <div class="faq-item fade-up" style="transition-delay:.14s">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            <span>Can I sell my BIRBX on OpenSea?</span>
+            <div class="faq-icon">+</div>
+          </button>
+          <div class="faq-a" style="display:none">BIRBX is fully ERC-721 compliant on Base. Your NFT is permanently yours on-chain and can be transferred to any compatible wallet.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTRACT -->
+<section class="contract-section">
+  <div class="wrap">
+    <div class="fade-up">
+      <div class="section-eyebrow">Transparency</div>
+      <h2 class="section-title" style="margin-bottom:28px">Contract Info</h2>
+    </div>
+    <div class="contract-card fade-up">
+      <div class="cc-item">
+        <div class="cc-label">Contract Address</div>
+        <div class="cc-value">
+          <a id="basescanLink" href="https://basescan.org/address/0x545dade39b1877f7f59e6a9e68f562bbc33a0b99" target="_blank">
+            0x545dade39b1877f7f59e6a9e68f562bbc33a0b99
+          </a>
+        </div>
+        <div class="cc-badge">✓ Verified on BaseScan</div>
+      </div>
+      <div class="cc-item">
+        <div class="cc-label">Network</div>
+        <div class="cc-value">Base Mainnet (Chain ID: 8453)</div>
+        <div class="cc-label" style="margin-top:12px">Standard</div>
+        <div class="cc-value">ERC-721 · ThirdWeb Drop</div>
+      </div>
+      <div class="cc-item">
+        <div class="cc-label">Supply</div>
+        <div class="cc-value">10,000 NFTs</div>
+        <div class="cc-label" style="margin-top:12px">Mint Price</div>
+        <div class="cc-value">Common $1 · Rare $2 · Epic $3 · Legendary $5</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <div class="footer-logo-img">
+            <img src="https://images.unsplash.com/photo-1634973357973-f2ed2657db3c?w=72&q=80" alt="" onerror="this.style.display='none'"/>
+          </div>
+          <span class="footer-logo-text">BIRBX</span>
+        </div>
+        <p class="footer-desc">10,000 unique generative NFTs on Base. The most anticipated drop of the season. Your NFT, your legacy.</p>
+        <div class="footer-socials">
+          <a href="#" class="social-btn" title="Twitter">𝕏</a>
+          <a href="#" class="social-btn" title="Discord">💬</a>
+          <a id="basescanLink" href="https://basescan.org/address/0x545dade39b1877f7f59e6a9e68f562bbc33a0b99" target="_blank" class="social-btn" title="BaseScan">⛓</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Navigation</h4>
+        <a href="#collection">Collection</a>
+        <a href="#mint">Mint</a>
+        <a href="#roadmap">Roadmap</a>
+        <a href="#faq">FAQ</a>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <a id="basescanLink" href="https://basescan.org/address/0x545dade39b1877f7f59e6a9e68f562bbc33a0b99" target="_blank">Contract</a>
+        <a href="https://bridge.base.org" target="_blank">Bridge to Base</a>
+        <a href="https://chainlist.org/chain/8453" target="_blank">Add Base to Wallet</a>
+        <a href="https://basescan.org" target="_blank">BaseScan</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 BIRBX NFT Collection · Base Network</span>
+      <span>Built with ❤️ on Base</span>
+    </div>
+  </div>
+</footer>
+
+<!-- PARTICLES SCRIPT -->
+<script>
+(function(){
+  const canvas = document.getElementById('particles');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  function resize(){
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function Particle(){
+    this.x = Math.random()*W;
+    this.y = Math.random()*H;
+    this.vx = (Math.random()-.5)*.3;
+    this.vy = (Math.random()-.5)*.3;
+    this.r  = Math.random()*1.5+.5;
+    this.a  = Math.random()*.6+.1;
+    this.c  = Math.random() < .5
+      ? `rgba(96,165,250,${this.a})`
+      : Math.random() < .5
+        ? `rgba(167,139,250,${this.a})`
+        : `rgba(34,211,238,${this.a})`;
+  }
+  Particle.prototype.update = function(){
+    this.x += this.vx; this.y += this.vy;
+    if(this.x<0||this.x>W) this.vx*=-1;
+    if(this.y<0||this.y>H) this.vy*=-1;
+  };
+  Particle.prototype.draw = function(){
+    ctx.beginPath();
+    ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
+    ctx.fillStyle=this.c;
+    ctx.fill();
+  };
+
+  for(let i=0;i<80;i++) particles.push(new Particle());
+
+  // Draw connections
+  function drawLines(){
+    for(let i=0;i<particles.length;i++){
+      for(let j=i+1;j<particles.length;j++){
+        const dx=particles[i].x-particles[j].x;
+        const dy=particles[i].y-particles[j].y;
+        const dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist<120){
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x,particles[i].y);
+          ctx.lineTo(particles[j].x,particles[j].y);
+          ctx.strokeStyle=`rgba(96,165,250,${.08*(1-dist/120)})`;
+          ctx.lineWidth=.5;
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  function animate(){
+    ctx.clearRect(0,0,W,H);
+    particles.forEach(p=>{p.update();p.draw();});
+    drawLines();
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+
+<!-- SCROLL ANIMATIONS -->
+<script>
+const observer = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){ e.target.classList.add('visible'); }
+  });
+},{threshold:.1});
+document.querySelectorAll('.fade-up').forEach(el=>observer.observe(el));
+</script>
+
+<!-- FAQ -->
+<script>
+function toggleFaq(btn){
+  const item=btn.parentElement;
+  const ans=item.querySelector('.faq-a');
+  const icon=btn.querySelector('.faq-icon');
+  const isOpen=item.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.faq-item.open').forEach(i=>{
+    i.classList.remove('open');
+    i.querySelector('.faq-a').style.display='none';
+    i.querySelector('.faq-icon').textContent='+';
+  });
+  if(!isOpen){
+    item.classList.add('open');
+    ans.style.display='block';
+    icon.textContent='+';
+  }
+}
+</script>
+
+<!-- WEB3 LOGIC -->
+<script>
+/* ── CONFIG ── */
+const CFG = {
+  // Contract per tier — all deployed on NFTs2Me on Base Mainnet
+  CONTRACTS: {
+    Common:    "0x7a01E7d1fae7F8eBf61f7585f8035c0CC948D655",
+    Rare:      "0xC85f4f718018c15Ee758a460Ec4A946AdF7e8020",
+    Epic:      "0x52a0094Fca7A85A1E432BeFfBDE7bc84CC49Eba4",
+    Legendary: "0xDA98A127eD0611A40BBA513f83f88B6e8db575Ec",
+  },
+  CONTRACT:   "0x7a01E7d1fae7F8eBf61f7585f8035c0CC948D655",
+  MAX_SUPPLY:    { Common: 6000, Rare: 3000, Epic: 900, Legendary: 100 },
+  MAX_PER_WALLET:{ Common: 20,   Rare: 10,   Epic: 5,   Legendary: 2   },
+  MAX_PER_TX: 20,
+  CHAIN_ID:   8453,
+  CHAIN_HEX:  "0x2105",
+  EXPLORER:   "https://basescan.org",
+  CHAINLINK_FEED: "0x71041dddad3595F9CEd3dCCFBe3D1F4b0a16Bb70",
+};
+
+// USD prices per tier (in cents to avoid float issues)
+const TIER_USD_CENTS = { Legendary: 500, Epic: 300, Rare: 200, Common: 100 };
+// Default to Common until rarity is detected from token ID
+let currentTierUSD = 100; // cents
+
+// Live ETH/USD price fetched from Chainlink (stored as integer, e.g. 340000 = $3400.00)
+let ethUsdPrice = null;
+// Computed ETH price for current tier (as BigInt wei)
+let computedPrice = null;
+
+const NATIVE_TOKEN = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+
+// NFTs2Me ERC-721 drop ABI
+const ABI = [
+  // NFTs2Me mint function
+  "function mint(uint256 amount) external payable",
+  "function mintTo(address to, uint256 amount) external payable",
+  // Price & supply
+  "function mintPrice() external view returns (uint256)",
+  "function totalSupply() external view returns (uint256)",
+  "function maxSupply() external view returns (uint256)",
+  "function balanceOf(address owner) external view returns (uint256)",
+  // Sale status
+  "function saleStarted() external view returns (bool)",
+  "function paused() external view returns (bool)",
+];
+
+/* ── State ── */
+let provider=null,signer=null,contract=null,address=null;
+let qty=1,minting=false,didMint=false;
+let activeTierName = "Common"; // currently selected tier
+
+// Price read directly from contract claim condition (BigInt wei)
+let contractPrice    = null;
+let contractCurrency = null;
+
+/* ── Helpers ── */
+const $=id=>document.getElementById(id);
+const set=(id,v)=>{const e=$(id);if(e)e.textContent=v;};
+
+/* ── Read price directly from NFTs2Me contract ── */
+async function fetchContractPrice(){
+  if(!contract) return null;
+  try{
+    // NFTs2Me exposes mintPrice() directly
+    const priceWei = BigInt((await contract.mintPrice()).toString());
+    contractPrice    = priceWei;
+    contractCurrency = NATIVE_TOKEN;
+
+    const priceEth = parseFloat(ethers.formatEther(priceWei));
+
+    if(ethUsdPrice){
+      const ethUsdDollars = ethUsdPrice / 1e8;
+      const usdValue = priceEth * ethUsdDollars;
+      set('priceEthDisplay', priceEth.toFixed(6) + ' ETH');
+      set('priceUsdDisplay', '≈ $' + usdValue.toFixed(2) + ' USD');
+      set('oraclePriceRate', '1 ETH = $' + ethUsdDollars.toLocaleString(undefined,{maximumFractionDigits:2}) + ' · live');
+    } else {
+      set('priceEthDisplay', priceEth.toFixed(6) + ' ETH');
+      set('priceUsdDisplay', 'Fetching USD…');
+    }
+
+    computedPrice = priceWei;
+    changeQty(0);
+    console.log('Contract mint price:', priceEth, 'ETH');
+    return priceWei;
+  }catch(e){
+    console.warn('Could not read mintPrice():', e.message);
+    return computedPrice;
+  }
+}
+
+/* ── ETH/USD Price Fetcher (pure HTTP, no RPC, no CORS issues) ── */
+const PRICE_APIS = [
+  // CoinGecko
+  async () => {
+    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd', {cache:'no-store'});
+    const d = await r.json();
+    return d.ethereum.usd;
+  },
+  // Binance (very reliable, CORS open)
+  async () => {
+    const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT', {cache:'no-store'});
+    const d = await r.json();
+    return parseFloat(d.price);
+  },
+  // Coinbase
+  async () => {
+    const r = await fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot', {cache:'no-store'});
+    const d = await r.json();
+    return parseFloat(d.data.amount);
+  },
+];
+
+async function fetchEthUsdPrice(){
+  for(const apiFn of PRICE_APIS){
+    try{
+      const price = await apiFn();
+      if(!price || isNaN(price) || price < 100) continue; // sanity check
+      ethUsdPrice = Math.round(price * 1e8); // store as 8-decimal int
+      updatePriceDisplays(price);
+      return price;
+    }catch(e){
+      console.warn('Price API failed, trying next…', e.message);
+    }
+  }
+  console.error('All price APIs failed');
+  return null;
+}
+
+// Convert USD cents to wei using live ETH price
+function usdCentsToWei(cents){
+  if(!ethUsdPrice) return null;
+  // wei = (cents / 100) / ethUsdPrice_dollars * 1e18
+  // ethUsdPrice has 8 decimals, so ethUsdPrice_dollars = ethUsdPrice / 1e8
+  // wei = cents * 1e18 * 1e8 / (100 * ethUsdPrice)
+  const numerator = BigInt(cents) * BigInt(1e18) * BigInt(1e8);
+  const denominator = BigInt(100) * BigInt(ethUsdPrice);
+  // Add 0.5% buffer so transaction doesn't fail on minor price moves
+  const wei = (numerator * 1005n) / (denominator * 1000n);
+  return wei;
+}
+
+function updatePriceDisplays(ethUsdDollars){
+  const usdAmount = currentTierUSD / 100;
+  const ethAmount = usdAmount / ethUsdDollars;
+  computedPrice = usdCentsToWei(currentTierUSD);
+
+  const ethStr = ethAmount.toFixed(6);
+
+  set('priceEthDisplay', ethStr + ' ETH');
+  set('priceUsdDisplay', '$' + usdAmount.toFixed(2) + ' USD (fixed)');
+  set('oraclePriceRate', '1 ETH = $' + ethUsdDollars.toLocaleString(undefined,{maximumFractionDigits:2}) + ' · live');
+
+  changeQty(0);
+}
+
+/* ── Toast ── */
+let tTimer;
+function toast(msg,type='',ico='ℹ'){
+  const t=$('toast');
+  $('toastMsg').textContent=msg;
+  $('toastIco').textContent=ico;
+  t.className='show '+(type||'');
+  clearTimeout(tTimer);
+  tTimer=setTimeout(()=>{t.className='';},5000);
+}
+
+/* ── Modal ── */
+function openModal(){$('overlay').classList.add('open');}
+function closeModal(){$('overlay').classList.remove('open');}
+window.addEventListener('click',e=>{if(e.target.id==='overlay')closeModal();});
+
+/* ── Provider picker ── */
+function getProv(type){
+  const eth=window.ethereum;
+  if(!eth)return null;
+  if(eth.providers&&Array.isArray(eth.providers)){
+    if(type==='metamask') return eth.providers.find(p=>p.isMetaMask&&!p.isBraveWallet)||eth;
+    if(type==='coinbase') return eth.providers.find(p=>p.isCoinbaseWallet)||eth;
+    if(type==='okx')      return eth.providers.find(p=>p.isOkxWallet||p.isOKExWallet)||eth;
+    return eth.providers[0]||eth;
+  }
+  return eth;
+}
+
+/* ── Connect ── */
+async function connectWith(type){
+  closeModal();
+  if(type==='trust'&&!window.ethereum){
+    toast('Open in Trust Wallet\'s built-in browser','err','🛡️');return;
+  }
+  if(!window.ethereum){
+    toast('No wallet detected — install MetaMask','err','⚠');
+    window.open('https://metamask.io','_blank');return;
+  }
+  try{
+    const ep=getProv(type);
+    if(!ep){toast('Wallet not found','err','⚠');return;}
+    provider=new ethers.BrowserProvider(ep,"any");
+    await provider.send('eth_requestAccounts',[]);
+    signer=await provider.getSigner();
+    address=await signer.getAddress();
+    await onConnected();
+  }catch(e){
+    console.error(e);
+    if(e.code===4001||e.message?.includes('rejected'))
+      toast('Connection cancelled','','✕');
+    else
+      toast('Connection failed','err','⚠');
+  }
+}
+
+async function onConnected(){
+  const net=await provider.getNetwork();
+  const cid=Number(net.chainId);
+  const short=address.slice(0,6)+'…'+address.slice(-4);
+
+  const btn=$('walletBtn');
+  btn.innerHTML=`<span class="wdot"></span>${short}`;
+  btn.className='connected';
+  btn.onclick=disconnect;
+
+  const badge=$('navBadge');
+  const names={8453:'Base',84532:'Base Sepolia',1:'Ethereum',137:'Polygon',56:'BNB'};
+  $('navNet').textContent=names[cid]||`Chain ${cid}`;
+  badge.style.display='flex';
+
+  toast(`Connected: ${short}`,'ok','✓');
+
+  if(cid!==CFG.CHAIN_ID){
+    toast('Wrong network — switching to Base…','','🔄');
+    await switchToBase();
+    return;
+  }
+
+  try{
+    // Connect to whichever tier is currently selected
+    const tierContract = CFG.CONTRACTS[activeTierName] || CFG.CONTRACTS.Common;
+    contract = new ethers.Contract(tierContract, ABI, signer);
+    // Fetch ETH/USD price AND contract claim condition price in parallel
+    await Promise.all([fetchEthUsdPrice(), fetchContractPrice()]);
+    await loadData();
+  }catch(e){console.error(e);}
+
+  $('qMinus').disabled=false;
+  $('qPlus').disabled=false;
+  updateBtn();
+
+  if(window.ethereum){
+    window.ethereum.removeAllListeners?.('accountsChanged');
+    window.ethereum.removeAllListeners?.('chainChanged');
+    window.ethereum.on('accountsChanged',a=>{if(!a||!a.length)disconnect();else location.reload();});
+    window.ethereum.on('chainChanged',()=>location.reload());
+  }
+}
+
+async function switchToBase(){
+  try{
+    await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:CFG.CHAIN_HEX}]});
+  }catch(e){
+    if(e.code===4902){
+      try{
+        await window.ethereum.request({method:'wallet_addEthereumChain',params:[{
+          chainId:CFG.CHAIN_HEX,chainName:'Base',
+          nativeCurrency:{name:'Ether',symbol:'ETH',decimals:18},
+          rpcUrls:['https://mainnet.base.org'],
+          blockExplorerUrls:['https://basescan.org'],
+        }]});
+        toast('Base network added!','ok','✓');
+      }catch{}
+    }else if(e.code===4001){
+      toast('Please switch to Base Mainnet','err','⚠');
+      const btn=$('walletBtn');
+      btn.innerHTML='⚠ Switch to Base';
+      btn.className='wrong-chain';
+      btn.onclick=()=>switchToBase();
+    }
+  }
+}
+
+function disconnect(){
+  provider=signer=contract=address=null;
+  const btn=$('walletBtn');
+  btn.innerHTML='Connect Wallet';btn.className='';btn.onclick=openModal;
+  $('navBadge').style.display='none';
+  $('qMinus').disabled=true;$('qPlus').disabled=true;
+  setSalePill('none','Connect wallet to load');
+  updateBtn();
+}
+
+/* ── Load data ── */
+async function loadData(){
+  if(!contract)return;
+  try{
+    let minted=0,isPaused=false,saleActive=true,maxSupply=CFG.MAX_SUPPLY[activeTierName]||10000;
+
+    try{ minted=Number(await contract.totalSupply()); }catch{}
+    try{ isPaused=await contract.paused(); }catch{}
+    try{ saleActive=await contract.saleStarted(); }catch{ saleActive=!isPaused; }
+    try{ maxSupply=Number(await contract.maxSupply()); }catch{}
+
+    const remaining = Math.max(0, maxSupply - minted);
+    const pct       = Math.min((minted / maxSupply) * 100, 100);
+    const pctStr    = pct.toFixed(1);
+
+    // Update all stat displays
+    set('heroTotalSupply', maxSupply.toLocaleString());
+    set('sMinted',    minted.toLocaleString());
+    set('sLeft',      remaining.toLocaleString());
+    set('heroMinted', minted.toLocaleString());
+    set('heroLeft',   remaining.toLocaleString());
+    set('progMinted', minted.toLocaleString());
+    set('progPct',    pctStr);
+    set('mcProgTxt',  `${minted.toLocaleString()} / ${maxSupply.toLocaleString()}`);
+    set('mcProgPct',  pctStr+'%');
+    set('mint-remain-val', remaining.toLocaleString());
+
+    // Progress bars
+    const fillEl=$('progFill');
+    const mcFill=$('mcProgFill');
+    if(fillEl) fillEl.style.width=pctStr+'%';
+    if(mcFill) mcFill.style.width=pctStr+'%';
+
+    if(isPaused)        setSalePill('off','⏸ Minting Paused');
+    else if(saleActive) setSalePill('live','🟢 Public Sale Live');
+    else                setSalePill('off','⚙ Sale Not Started');
+
+    // Re-read contract price
+    await fetchContractPrice();
+    updateBtn();
+  }catch(e){console.error('loadData:',e);}
+}
+
+function setSalePill(state,label){
+  const p=$('salePill');
+  p.className='sale-pill '+(state==='live'?'sp-live':state==='off'?'sp-off':'sp-none');
+  set('saleText',label);
+}
+
+/* ── Quantity ── */
+function changeQty(d){
+  const maxPerWallet = CFG.MAX_PER_WALLET[activeTierName] || 10;
+  qty=Math.max(1,Math.min(maxPerWallet, qty+d));
+  set('qNum',qty);
+  set('cQty','× '+qty);
+  // Update the max per wallet label
+  const subEl = document.querySelector('.qty-sub');
+  if(subEl) subEl.textContent = `max ${maxPerWallet} per wallet`;
+
+  // Prefer contractPrice (from ThirdWeb claim condition), fall back to oracle
+  const price = contractPrice || computedPrice;
+  if(price){
+    const totalWei = price * BigInt(qty);
+    const totalEth = parseFloat(ethers.formatEther(totalWei)).toFixed(6);
+    // Show USD if oracle available
+    if(ethUsdPrice){
+      const ethUsdDollars = ethUsdPrice / 1e8;
+      const totalUsd = (parseFloat(ethers.formatEther(totalWei)) * ethUsdDollars).toFixed(2);
+      set('cTotal', totalEth + ' ETH\n≈ $' + totalUsd);
+    } else {
+      set('cTotal', totalEth + ' ETH');
+    }
+  } else {
+    set('cTotal', 'Fetching price…');
+  }
+  updateBtn();
+}
+
+function updateBtn(){
+  const btn=$('mintCta'),txt=$('mintCtaTxt');
+  if(didMint)return;
+  if(!address){btn.disabled=true;if(txt)txt.textContent='Connect Wallet to Mint';return;}
+  if(minting)return;
+  btn.disabled=false;
+  if(txt)txt.textContent=`⚡ Mint ${qty} BIRBX NFT${qty>1?'s':''}`;
+}
+
+/* ── Tier Selector ── */
+const TIER_COLORS = {
+  Legendary:{color:'#f59e0b',bg:'rgba(245,158,11,0.07)',border:'rgba(245,158,11,0.5)'},
+  Epic:      {color:'#8b5cf6',bg:'rgba(139,92,246,0.07)',border:'rgba(139,92,246,0.5)'},
+  Rare:      {color:'#3b82f6',bg:'rgba(59,130,246,0.07)', border:'rgba(59,130,246,0.5)'},
+  Common:    {color:'#22d3ee',bg:'rgba(34,211,238,0.07)', border:'rgba(34,211,238,0.5)'},
+};
+
+function selectTier(el){
+  // Deselect all
+  document.querySelectorAll('.tier-opt').forEach(t=>{
+    const tier = t.dataset.tier;
+    const c = TIER_COLORS[tier];
+    t.classList.remove('selected');
+    t.style.background = 'rgba(255,255,255,0.02)';
+    t.style.borderColor = c.border.replace('0.5','0.3');
+  });
+
+  // Select clicked
+  const tier  = el.dataset.tier;
+  const cents = parseInt(el.dataset.cents);
+  const c     = TIER_COLORS[tier];
+  el.classList.add('selected');
+  el.style.background  = c.bg;
+  el.style.borderColor = c.border;
+
+  // Update global tier name and USD amount
+  activeTierName  = tier;
+  currentTierUSD  = cents;
+
+  // Switch contract to the selected tier's contract
+  if(signer){
+    const tierContract = CFG.CONTRACTS[tier];
+    contract = new ethers.Contract(tierContract, ABI, signer);
+    // Reset prices so we re-fetch from new contract
+    contractPrice    = null;
+    contractCurrency = null;
+    computedPrice    = null;
+    // Re-read price from new contract
+    set('priceEthDisplay', 'Fetching…');
+    set('priceUsdDisplay',  '—');
+    fetchContractPrice().then(()=> changeQty(0));
+  } else if(ethUsdPrice){
+    // Not connected yet — show oracle estimate
+    computedPrice = usdCentsToWei(currentTierUSD);
+    const ethUsdDollars = ethUsdPrice / 1e8;
+    const usdAmount     = cents / 100;
+    const ethAmount     = usdAmount / ethUsdDollars;
+    set('priceEthDisplay', ethAmount.toFixed(6) + ' ETH');
+    set('priceUsdDisplay', '$' + usdAmount.toFixed(2) + ' USD (est.)');
+    changeQty(0);
+  } else {
+    fetchEthUsdPrice().then(p=>{
+      if(p){ computedPrice = usdCentsToWei(currentTierUSD); changeQty(0); }
+    });
+  }
+
+  // Update max supply display for selected tier
+  const supplyEl = document.getElementById('mint-remain-val');
+  if(supplyEl) supplyEl.textContent = (CFG.MAX_SUPPLY[tier]||0).toLocaleString();
+
+  // Update supply displays for selected tier
+  const tierSupply = CFG.MAX_SUPPLY[tier] || 0;
+  const tierMax    = CFG.MAX_PER_WALLET[tier] || 10;
+  // Hero stats
+  set('heroTotalSupply', tierSupply.toLocaleString());
+  set('heroLeft',    tierSupply.toLocaleString());
+  set('heroMinted',  '0');
+  // Progress bar text
+  const progEl = document.getElementById('progMinted');
+  if(progEl) progEl.textContent = '0';
+  // Mint card progress
+  set('mcProgTxt', `0 / ${tierSupply.toLocaleString()}`);
+  set('mcProgPct',  '0%');
+  // Mint remaining
+  set('mint-remain-val', tierSupply.toLocaleString());
+  // Reset qty to 1 respecting new tier max
+  qty = 1;
+  changeQty(0);
+
+  // Update BaseScan links to point to active tier contract
+  const tierAddr = CFG.CONTRACTS[tier];
+  document.querySelectorAll('#basescanLink').forEach(el=>{
+    el.href = `https://basescan.org/address/${tierAddr}`;
+  });
+
+  toast(`${tier} tier selected — contract switched`,'','✦');
+}
+
+/* ── MINT ── */
+async function handleMint(){
+  if(!address){openModal();return;}
+
+  const net=await provider.getNetwork();
+  if(Number(net.chainId)!==CFG.CHAIN_ID){
+    toast('Please switch to Base Mainnet first','err','⚠');
+    switchToBase();return;
+  }
+
+  if(!contract){toast('Contract not connected','err','⚠');return;}
+
+  minting=true;dismissErr();
+  const btn=$('mintCta');btn.disabled=true;
+
+  try{
+    // ── Step 1: Read EXACT price from contract claim condition ──
+    btn.innerHTML='<span class="spin"></span><span>Reading contract…</span>';
+    toast('Reading price from contract…','','🔄');
+
+    const claimPrice = await fetchContractPrice();
+    if(claimPrice === null || claimPrice === undefined){
+      throw new Error('Could not read price from contract — check claim conditions in ThirdWeb');
+    }
+
+    const pricePerToken = claimPrice;
+    const currency      = contractCurrency || NATIVE_TOKEN;
+    const value         = pricePerToken * BigInt(qty);
+    const priceEth      = parseFloat(ethers.formatEther(pricePerToken)).toFixed(6);
+
+    btn.innerHTML='<span class="spin"></span><span>Confirm in wallet…</span>';
+    toast(`Minting ${qty} NFT${qty>1?'s':''} — ${priceEth} ETH each`,'','📝');
+
+    // ── Step 2: Estimate gas ──
+    let gasLimit;
+    try{
+      const est = await contract.mint.estimateGas(BigInt(qty), { value });
+      gasLimit = (est * 130n) / 100n;
+    }catch(gasErr){
+      console.warn('Gas estimate failed:', gasErr.message);
+      gasLimit = 300000n;
+    }
+
+    // ── Step 3: Send transaction using NFTs2Me mint() ──
+    const tx = await contract.mint(BigInt(qty), { value, gasLimit });
+
+    btn.innerHTML='<span class="spin"></span><span>Minting on Base…</span>';
+    toast('Transaction submitted — confirming…','','⏳');
+
+    const receipt = await tx.wait();
+
+    if(receipt.status===1){
+      didMint=true;
+      $('msgOk').style.display='block';
+      btn.style.display='none';
+      set('okTitle',`🎉 Minted ${qty} BIRBX NFT${qty>1?'s':''}!`);
+      set('okSub','Your NFTs are now in your wallet on Base');
+      $('txLink').href=`${CFG.EXPLORER}/tx/${receipt.hash}`;
+      toast(`🎉 Successfully minted ${qty} BIRBX!`,'ok','🎉');
+      setTimeout(()=>loadData(),2000);
+    }else{
+      throw new Error('Transaction reverted');
+    }
+  }catch(e){
+    console.error(e);
+    const raw=e?.reason||e?.shortMessage||e?.message||'';
+    const msg=
+      (raw.includes('user rejected')||e.code===4001) ? 'Transaction cancelled' :
+      raw.includes('insufficient funds')              ? 'Not enough ETH in wallet' :
+      raw.includes('!Qty')                            ? 'Exceeds max per wallet' :
+      raw.includes('!Sale')||raw.includes('!Active')  ? 'Sale not active — set a claim condition in ThirdWeb' :
+      raw.includes('claim conditions')                ? 'No active claim condition — check ThirdWeb dashboard' :
+      raw.includes('execution reverted')              ? 'Contract rejected — check claim conditions in ThirdWeb' :
+      (raw||'Transaction failed').slice(0,100);
+    $('msgErrTxt').textContent=msg;
+    $('msgErr').style.display='flex';
+    btn.innerHTML=`<span id="mintCtaTxt">⚡ Mint ${qty} BIRBX NFT${qty>1?'s':''}</span>`;
+    btn.disabled=false;
+    toast(msg,'err','⚠');
+  }finally{minting=false;}
+}
+
+function dismissErr(){$('msgErr').style.display='none';}
+function resetOk(){
+  didMint=false;
+  $('msgOk').style.display='none';
+  $('mintCta').style.display='';
+  $('mintCta').innerHTML=`<span id="mintCtaTxt">⚡ Mint ${qty} BIRBX NFT${qty>1?'s':''}</span>`;
+  $('mintCta').disabled=false;
+}
+
+/* ── GENERATIVE ART ENGINE ── */
+function drawGenArt(canvas,seed,rarity){
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height;
+  let s=seed*9301+49297;
+  const rand=()=>{s=(s*9301+49297)%233280;return s/233280;};
+  const ri=(a,b)=>Math.floor(rand()*(b-a+1))+a;
+  const rf=(a,b)=>rand()*(b-a)+a;
+  const palettes={
+    Legendary:['#FFD700','#FF8C00','#FF4500','#FFE066','#FFF4C2'],
+    Epic:['#8b5cf6','#a78bfa','#7c3aed','#c4b5fd','#4c1d95'],
+    Rare:['#3b82f6','#60a5fa','#1d4ed8','#93c5fd','#1e40af'],
+    Common:['#22d3ee','#67e8f9','#0891b2','#a5f3fc','#164e63'],
+  };
+  const pal=palettes[rarity]||palettes.Common;
+  const bgDark=rarity==='Legendary'?'#1a0a00':rarity==='Epic'?'#0d0020':rarity==='Rare'?'#050d2a':'#001a20';
+  const bg=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,W*.85);
+  bg.addColorStop(0,bgDark);bg.addColorStop(1,'#050816');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle=pal[0]+'14';ctx.lineWidth=.5;
+  for(let i=0;i<W;i+=18){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,H);ctx.stroke();ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(W,i);ctx.stroke();}
+  const style=ri(0,3);
+  const layers=ri(4,7);
+  if(style===0){
+    for(let l=0;l<layers;l++){
+      const cx=W*rf(.25,.75),cy=H*rf(.25,.75),r=rf(25,W*.42),col=pal[l%pal.length];
+      ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle=col+'80';ctx.lineWidth=rf(.5,2.5);ctx.stroke();
+      const a=rf(0,Math.PI*2),dx=cx+Math.cos(a)*r,dy=cy+Math.sin(a)*r;
+      const g=ctx.createRadialGradient(dx,dy,0,dx,dy,rf(3,11));
+      g.addColorStop(0,col+'ff');g.addColorStop(1,col+'00');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(dx,dy,rf(3,11),0,Math.PI*2);ctx.fill();
+    }
+    const cg=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,W*.22);
+    cg.addColorStop(0,pal[0]+'cc');cg.addColorStop(.5,pal[1]+'44');cg.addColorStop(1,'transparent');
+    ctx.fillStyle=cg;ctx.beginPath();ctx.arc(W/2,H/2,W*.22,0,Math.PI*2);ctx.fill();
+  } else if(style===1){
+    for(let l=0;l<layers*3;l++){
+      const x1=rf(0,W),y1=rf(0,H),x2=rf(0,W),y2=rf(0,H),x3=rf(0,W),y3=rf(0,H),col=pal[l%pal.length];
+      ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.lineTo(x3,y3);ctx.closePath();
+      ctx.fillStyle=col+'15';ctx.strokeStyle=col+'55';ctx.lineWidth=.7;ctx.fill();ctx.stroke();
+    }
+    for(let n=0;n<10;n++){
+      const nx=rf(0,W),ny=rf(0,H),nc=pal[n%pal.length];
+      const ng=ctx.createRadialGradient(nx,ny,0,nx,ny,rf(3,9));
+      ng.addColorStop(0,nc+'ff');ng.addColorStop(1,nc+'00');
+      ctx.fillStyle=ng;ctx.beginPath();ctx.arc(nx,ny,rf(3,9),0,Math.PI*2);ctx.fill();
+    }
+  } else if(style===2){
+    for(let l=0;l<18;l++){
+      const r=(l/18)*W*.55+8,col=pal[l%pal.length];
+      ctx.beginPath();
+      for(let a=0;a<Math.PI*2;a+=.05){
+        const wb=Math.sin(a*ri(3,7)+l)*rf(2,10);
+        const px=W/2+Math.cos(a)*(r+wb),py=H/2+Math.sin(a)*(r+wb);
+        if(a===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+      }
+      ctx.closePath();ctx.strokeStyle=col+(l%2===0?'65':'28');ctx.lineWidth=rf(.4,1.8);ctx.stroke();
+    }
+    const cg2=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,35);
+    cg2.addColorStop(0,pal[0]+'ff');cg2.addColorStop(1,pal[0]+'00');
+    ctx.fillStyle=cg2;ctx.beginPath();ctx.arc(W/2,H/2,35,0,Math.PI*2);ctx.fill();
+  } else {
+    for(let l=0;l<layers*2;l++){
+      const cx=rf(0,W),cy=rf(0,H),r=rf(18,W*.38),col=pal[l%pal.length];
+      const g=ctx.createRadialGradient(cx,cy,0,cx,cy,r);
+      g.addColorStop(0,col+'50');g.addColorStop(.5,col+'1a');g.addColorStop(1,'transparent');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
+    }
+    for(let l=0;l<28;l++){
+      ctx.beginPath();ctx.moveTo(rf(0,W),rf(0,H));
+      ctx.bezierCurveTo(rf(0,W),rf(0,H),rf(0,W),rf(0,H),rf(0,W),rf(0,H));
+      ctx.strokeStyle=pal[l%pal.length]+'35';ctx.lineWidth=rf(.3,1.4);ctx.stroke();
+    }
+  }
+  ctx.font=`bold ${W*.065}px 'Space Mono',monospace`;ctx.textAlign='right';
+  ctx.fillStyle=pal[0]+'55';ctx.fillText(rarity.toUpperCase(),W-8,24);
+  ctx.font=`${W*.05}px 'Space Mono',monospace`;ctx.textAlign='left';
+  ctx.fillStyle='rgba(255,255,255,0.18)';ctx.fillText(`BIRBX #${String(seed).padStart(4,'0')}`,8,H-8);
+  for(let y=0;y<H;y+=3){ctx.fillStyle='rgba(0,0,0,0.05)';ctx.fillRect(0,y,W,1);}
+}
+function makeCanvas(seed,rarity,size){
+  const c=document.createElement('canvas');
+  c.width=size;c.height=size;c.style.cssText=`width:${size}px;height:${size}px;display:block;`;
+  drawGenArt(c,seed,rarity);return c;
+}
+
+/* ── HERO ART ── */
+(function(){
+  const heroWrap=document.getElementById('hero-showcase-art');
+  if(heroWrap){
+    const c=makeCanvas(1,rarity='Legendary',460);
+    c.style.cssText='width:100%;height:100%;display:block;object-fit:cover;';
+    heroWrap.appendChild(c);
+  }
+  const floats=[{id:'float-img-1',seed:42,rarity:'Epic'},{id:'float-img-2',seed:137,rarity:'Rare'},{id:'float-img-3',seed:256,rarity:'Common'}];
+  floats.forEach(f=>{
+    const el=document.getElementById(f.id);
+    if(!el)return;
+    const c=makeCanvas(f.seed,f.rarity,130);
+    c.style.cssText='width:100%;height:100%;display:block;';
+    el.appendChild(c);
+  });
+  const mintArt=document.getElementById('mint-card-art');
+  if(mintArt){
+    const c=makeCanvas(1,'Legendary',48);
+    c.style.cssText='width:48px;height:48px;display:block;border-radius:10px;';
+    mintArt.appendChild(c);
+  }
+})();
+
+/* ── GALLERY ── */
+const GALLERY_ITEMS=[
+  {seed:1,rarity:'Legendary',id:'0001'},{seed:42,rarity:'Epic',id:'0042'},
+  {seed:137,rarity:'Rare',id:'0137'},{seed:256,rarity:'Common',id:'0256'},
+];
+const RARITY_CLASS={Legendary:'rarity-legendary',Epic:'rarity-epic',Rare:'rarity-rare',Common:'rarity-common'};
+const MINT_PRICE_BY_RARITY={Legendary:'$5',Epic:'$3',Rare:'$2',Common:'$1'};
+(function(){
+  const grid=document.getElementById('nft-gallery-grid');
+  if(!grid)return;
+  GALLERY_ITEMS.forEach((n,i)=>{
+    const card=document.createElement('div');
+    card.className='nft-card fade-up';
+    card.style.transitionDelay=(i*.07)+'s';
+    const wrap=document.createElement('div');
+    wrap.className='nft-img-wrap';
+    wrap.style.cssText='position:relative;overflow:hidden;';
+    const c=makeCanvas(parseInt(n.id),n.rarity,360);
+    c.style.cssText='width:100%;height:100%;display:block;transition:transform .4s cubic-bezier(.4,0,.2,1);';
+    card.addEventListener('mouseenter',()=>{c.style.transform='scale(1.08)';});
+    card.addEventListener('mouseleave',()=>{c.style.transform='';});
+    const overlay=document.createElement('div');
+    overlay.className='nft-overlay';
+    overlay.innerHTML='<button class="nft-overlay-btn" onclick="document.getElementById(\'mint\').scrollIntoView({behavior:\'smooth\'})">Mint Now</button>';
+    const badge=document.createElement('div');
+    badge.className='rarity-badge '+RARITY_CLASS[n.rarity];
+    badge.textContent=n.rarity;
+    wrap.appendChild(c);wrap.appendChild(overlay);wrap.appendChild(badge);
+    const body=document.createElement('div');
+    body.className='nft-body';
+    body.innerHTML=`<div class="nft-name">BIRBX #${n.id}</div><div class="nft-meta"><span class="nft-price">${MINT_PRICE_BY_RARITY[n.rarity]}</span><span class="nft-id" style="font-size:.66rem;color:var(--muted)">${n.rarity}</span></div>`;
+    card.appendChild(wrap);card.appendChild(body);
+    grid.appendChild(card);
+  });
+})();
+
+/* ── TRAITS SECTION ── */
+const TIERS=[
+  {name:'Legendary',color:'#f59e0b',colorLight:'rgba(245,158,11,0.15)',border:'rgba(245,158,11,0.35)',seed:1,
+    supply:'1%',count:'~100',floor:'$5',mult:'3×',
+    description:'The apex of the collection. Each Legendary was hand-reviewed by our art director — no two share the same composition. They carry the highest weight in governance votes and yield triple staking rewards.',
+    scarcity:'Of the ~100 Legendaries in existence, an estimated 31 have never moved from their mint wallet. Effective circulating supply is closer to 69. None are currently listed.',
+    traits:['Cosmic Aura background','Divine Crown headpiece','Ethereal Wings','Tri-color holographic eyes','Gold leaf skin texture','Custom particle trail']},
+  {name:'Epic',color:'#8b5cf6',colorLight:'rgba(139,92,246,0.15)',border:'rgba(139,92,246,0.35)',seed:42,
+    supply:'9%',count:'~900',floor:'$3',mult:'2×',
+    description:'Where technological beauty meets generative fine art. Epic pieces are distinguished by their augmented visor — rendered across 6 unique overlay compositions — and neon circuit tattoos that pulse with on-chain activity.',
+    traits:['Deep space background','Augmented reality visor','Neon circuit tattoos','Titanium exo-suit','Plasma core accessory','Dual-tone gradient skin']},
+  {name:'Rare',color:'#3b82f6',colorLight:'rgba(59,130,246,0.15)',border:'rgba(59,130,246,0.35)',seed:137,
+    supply:'30%',count:'~3,000',floor:'$2',mult:'1.5×',
+    description:'The backbone of the collection. Rare pieces are the first tier to unlock staking rewards and governance participation. Their holographic eye trait comes in 2 exclusive variants.',
+    traits:['Abstract wave background','Holographic eyes (2 variants)','Metallic skin tones','Urban streetwear','Crystal accessory','Gradient hair']},
+  {name:'Common',color:'#22d3ee',colorLight:'rgba(34,211,238,0.12)',border:'rgba(34,211,238,0.3)',seed:256,
+    supply:'60%',count:'~6,000',floor:'$1',mult:'1×',
+    description:'The foundation of the BIRBX community. Common pieces unlock base staking, holder airdrops, and community governance. Every holder is part of the same story.',
+    traits:['Gradient background','Standard eyes','Base skin tones','Casual wear','Simple accessory','Solid hair']},
+];
+let activeTier=0;
+
+function renderTierTabs(){
+  const tabs=document.getElementById('tier-tabs');
+  if(!tabs)return;
+  tabs.innerHTML=TIERS.map((t,i)=>`<button class="tier-tab${i===activeTier?' active':''}" onclick="setTier(${i})" style="${i===activeTier?`background:${t.colorLight};border-color:${t.border};color:${t.color}`:''}">${t.name}</button>`).join('');
+}
+function setTier(i){activeTier=i;renderTierTabs();renderTierDetail();}
+
+function renderTierDetail(){
+  const wrap=document.getElementById('tier-detail-wrap');
+  if(!wrap)return;
+  const t=TIERS[activeTier];
+  wrap.innerHTML=`
+    <div class="tier-detail-grid">
+      <div>
+        <div class="tier-canvas-wrap" id="tier-canvas-el" style="border-color:${t.border};box-shadow:0 0 50px ${t.color}18;"></div>
+        <div class="tier-stats-row">
+          ${[['Supply',t.supply],['Count',t.count],['Price',t.floor],['Staking',t.mult]].map(([l,v])=>`<div class="tier-stat-pill"><span class="tier-stat-val" style="color:${t.color}">${v}</span><span class="tier-stat-lbl">${l}</span></div>`).join('')}
+        </div>
+      </div>
+      <div>
+        <div class="tier-info-header">
+          <div class="tier-badge" style="color:${t.color};background:${t.colorLight};border:1px solid ${t.border}">${t.name}</div>
+          <span style="font-size:.72rem;color:var(--muted)">${t.supply} of supply</span>
+        </div>
+        <p class="tier-desc">${t.description}</p>
+        <div class="trait-list-label">Exclusive Traits</div>
+        <div class="trait-chips">${t.traits.map(tr=>`<div class="trait-chip"><div class="trait-chip-dot" style="background:${t.color}"></div><span>${tr}</span></div>`).join('')}</div>
+        ${t.scarcity?`<div class="scarcity-box"><div class="scarcity-box-title">⚠ Scarcity Note</div><div class="scarcity-box-body">${t.scarcity}</div></div>`:''}
+      </div>
+    </div>`;
+  const el=document.getElementById('tier-canvas-el');
+  if(el){const c=makeCanvas(parseInt(t.seed)||1,t.name,300);c.style.cssText='width:100%;height:auto;display:block;';el.appendChild(c);}
+}
+
+const RARITY_TABLE=[
+  ['Legendary','1%','~100','6 exclusive','$5','3×','#f59e0b'],
+  ['Epic','9%','~900','4 exclusive','$3','2×','#8b5cf6'],
+  ['Rare','30%','~3,000','3 exclusive','$2','1.5×','#3b82f6'],
+  ['Common','60%','~6,000','2 exclusive','$1','1×','#22d3ee'],
+];
+(function(){
+  const tb=document.getElementById('rarity-tbody');
+  if(!tb)return;
+  tb.innerHTML=RARITY_TABLE.map(([t,p,c,tr,f,m,col])=>`
+    <tr>
+      <td><span style="font-family:var(--mono);font-weight:700;color:${col}">${t}</span></td>
+      <td>${p}</td><td>${c}</td><td>${tr}</td>
+      <td style="font-weight:600;color:${col}">${f}</td>
+      <td><span class="rc-mult" style="color:${col};background:${col}18;border:1px solid ${col}30">${m}</span></td>
+    </tr>`).join('');
+})();
+
+renderTierTabs();renderTierDetail();
+
+/* ── FETCH ORACLE ON LOAD (read-only, no wallet needed) ── */
+(async function initOraclePrice(){
+  set('priceEthDisplay', 'Fetching…');
+  set('oraclePriceRate', 'Chainlink oracle');
+  try{
+    const priceUsd = await fetchEthUsdPrice();
+    if(priceUsd){
+      computedPrice = usdCentsToWei(currentTierUSD);
+      changeQty(0);
+    } else {
+      set('priceEthDisplay', 'Unavailable');
+      set('cTotal', 'Price unavailable');
+    }
+  }catch(e){ console.warn('Initial oracle fetch:', e); }
+
+  // Refresh silently every 60s
+  setInterval(async()=>{
+    try{
+      const priceUsd = await fetchEthUsdPrice();
+      if(priceUsd){
+        computedPrice = usdCentsToWei(currentTierUSD);
+        changeQty(0);
+      }
+    }catch{}
+  }, 60000);
+})();
+
+/* ── INIT ── */
+changeQty(0);
+document.addEventListener('DOMContentLoaded',()=>{
+  if(window.ethereum){
+    window.ethereum.request({method:'eth_accounts'})
+      .then(accs=>{
+        if(accs&&accs.length){
+          provider=new ethers.BrowserProvider(window.ethereum,"any");
+          provider.getSigner().then(s=>{signer=s;address=accs[0];onConnected();}).catch(console.error);
+        }
+      }).catch(console.error);
+  }
+});
+</script>
+</body>
+</html>
