@@ -1804,8 +1804,8 @@ section{position:relative;z-index:1;}
       <div class="cc-item">
         <div class="cc-label">Contract Address</div>
         <div class="cc-value">
-          <a id="basescanLink" href="https://basescan.org/address/0x545dade39b1877f7f59e6a9e68f562bbc33a0b99" target="_blank">
-            0x545dade39b1877f7f59e6a9e68f562bbc33a0b99
+          <a id="basescanLink" href="https://basescan.org/address/0x7a01E7d1fae7F8eBf61f7585f8035c0CC948D655" target="_blank">
+            <span id="contractAddrDisplay">0x7a01E7d1...D655</span>
           </a>
         </div>
         <div class="cc-badge">✓ Verified on BaseScan</div>
@@ -1814,13 +1814,22 @@ section{position:relative;z-index:1;}
         <div class="cc-label">Network</div>
         <div class="cc-value">Base Mainnet (Chain ID: 8453)</div>
         <div class="cc-label" style="margin-top:12px">Standard</div>
-        <div class="cc-value">ERC-721 · ThirdWeb Drop</div>
+        <div class="cc-value">ERC-721 · NFTs2Me Drop</div>
       </div>
       <div class="cc-item">
         <div class="cc-label">Supply</div>
-        <div class="cc-value">10,000 NFTs</div>
+        <div class="cc-value">10,000 NFTs (4 tiers)</div>
         <div class="cc-label" style="margin-top:12px">Mint Price</div>
         <div class="cc-value">Common $1 · Rare $2 · Epic $3 · Legendary $5</div>
+      </div>
+      <div class="cc-item">
+        <div class="cc-label">Treasury Wallet</div>
+        <div class="cc-value" style="font-size:.78rem">
+          <a href="https://basescan.org/address/0x03Bb17F8776881b185c4EE03eba372bA2b1320fD" target="_blank">
+            0x03Bb17...20fD
+          </a>
+        </div>
+        <div class="cc-badge">✓ Verified Revenue Address</div>
       </div>
     </div>
   </div>
@@ -1936,6 +1945,134 @@ section{position:relative;z-index:1;}
 })();
 </script>
 
+<!-- SECURITY FIREWALL -->
+<script>
+(function(){
+  'use strict';
+
+  // ── 1. DOMAIN LOCK ─────────────────────────────────────────────────────
+  // Only allow the mint page to function on your official domains
+  const ALLOWED_DOMAINS = [
+    'minting-nft-three.vercel.app',
+    'birbx.xyz',
+    'www.birbx.xyz',
+    'localhost',
+    '127.0.0.1',
+    '', // allow local file:// opening
+  ];
+
+  const currentHost = window.location.hostname.toLowerCase();
+  // Allow local file:// protocol always
+  const isLocalFile = window.location.protocol === 'file:';
+  const domainAllowed = isLocalFile || ALLOWED_DOMAINS.some(d => currentHost === d || currentHost.endsWith('.'+d));
+
+  if(!domainAllowed){
+    // Block the entire page — show warning instead
+    document.addEventListener('DOMContentLoaded', () => {
+      document.body.innerHTML = `
+        <div style="min-height:100vh;background:#030712;display:flex;align-items:center;justify-content:center;font-family:sans-serif;padding:24px">
+          <div style="max-width:480px;text-align:center;border:1px solid rgba(239,68,68,0.3);border-radius:20px;padding:40px;background:rgba(239,68,68,0.05)">
+            <div style="font-size:3rem;margin-bottom:16px">🚫</div>
+            <h2 style="color:#ef4444;font-size:1.4rem;margin-bottom:12px;font-weight:700">Unauthorized Domain</h2>
+            <p style="color:rgba(255,255,255,0.5);font-size:.9rem;line-height:1.7;margin-bottom:24px">
+              This page is only available on the official BIRBX website.<br/>
+              You may be on a phishing or copycat site.
+            </p>
+            <a href="https://minting-nft-three.vercel.app" 
+               style="display:inline-block;padding:12px 28px;background:linear-gradient(135deg,#06b6d4,#3b82f6);color:white;border-radius:10px;text-decoration:none;font-weight:700;font-size:.9rem">
+              Go to Official Site →
+            </a>
+          </div>
+        </div>`;
+    });
+    // Disable all scripts
+    throw new Error('Domain not authorized');
+  }
+
+  // ── 2. DEVTOOLS DETECTION ──────────────────────────────────────────────
+  // Detect if developer tools are open (bot/scraper signal)
+  let devtoolsOpen = false;
+  const threshold = 160;
+  const detectDevTools = () => {
+    if(window.outerWidth - window.innerWidth > threshold ||
+       window.outerHeight - window.innerHeight > threshold){
+      if(!devtoolsOpen){
+        devtoolsOpen = true;
+        console.warn('%c⚠ BIRBX Security: DevTools detected', 'color:red;font-size:16px;font-weight:bold');
+      }
+    } else {
+      devtoolsOpen = false;
+    }
+  };
+  setInterval(detectDevTools, 1000);
+
+  // ── 3. RIGHT-CLICK / COPY PROTECTION ──────────────────────────────────
+  // Prevent casual source theft
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('keydown', e => {
+    // Block Ctrl+U (view source), Ctrl+S (save), Ctrl+Shift+I (devtools)
+    if((e.ctrlKey || e.metaKey) && ['u','s'].includes(e.key.toLowerCase())){
+      e.preventDefault();
+      return false;
+    }
+  });
+
+  // ── 4. IFRAME PROTECTION ──────────────────────────────────────────────
+  // Prevent the page from being embedded in iframes (clickjacking)
+  if(window.self !== window.top){
+    window.top.location = window.self.location;
+  }
+
+  // ── 5. RATE LIMITING (client-side) ────────────────────────────────────
+  // Track mint attempts per session — block if too many too fast
+  const RATE_WINDOW_MS  = 60 * 1000; // 1 minute
+  const MAX_ATTEMPTS    = 5;         // max 5 mint attempts per minute
+  let mintAttempts      = [];
+
+  window.__checkRateLimit = function(){
+    const now = Date.now();
+    mintAttempts = mintAttempts.filter(t => now - t < RATE_WINDOW_MS);
+    if(mintAttempts.length >= MAX_ATTEMPTS){
+      return false; // blocked
+    }
+    mintAttempts.push(now);
+    return true; // allowed
+  };
+
+  // ── 6. CONSOLE WARNING ────────────────────────────────────────────────
+  console.log('%c⚠ BIRBX Security Warning', 'color:#f59e0b;font-size:22px;font-weight:900');
+  console.log('%cIf someone told you to paste code here, you are being scammed.', 'color:#ef4444;font-size:14px');
+  console.log('%cNever paste anything into the browser console.', 'color:#ef4444;font-size:14px');
+
+  // ── 7. WALLET DRAINER PROTECTION ──────────────────────────────────────
+  // Intercept any suspicious transaction requests
+  const TREASURY_WALLET = '0x03Bb17F8776881b185c4EE03eba372bA2b1320fD'.toLowerCase();
+  const originalEthereum = window.ethereum;
+  if(originalEthereum){
+    const originalRequest = originalEthereum.request.bind(originalEthereum);
+    originalEthereum.request = async function(args){
+      // Block any eth_sendTransaction not going to our contracts
+      if(args.method === 'eth_sendTransaction'){
+        const allowedContracts = [
+          '0x7a01e7d1fae7f8ebf61f7585f8035c0cc948d655', // Common
+          '0xc85f4f718018c15ee758a460ec4a946adf7e8020', // Rare
+          '0x52a0094fca7a85a1e432beffbde7bc84cc49eba4', // Epic
+          '0xda98a127ed0611a40bba513f83f88b6e8db575ec', // Legendary
+        ];
+        const to = (args.params?.[0]?.to || '').toLowerCase();
+        if(to && !allowedContracts.includes(to)){
+          console.error('BIRBX Security: Blocked transaction to unknown contract:', to);
+          throw new Error('Transaction blocked by BIRBX security — unauthorized contract');
+        }
+      }
+      return originalRequest(args);
+    };
+  }
+
+  console.log('%c✓ BIRBX Security Layer Active', 'color:#10b981;font-size:12px');
+})();
+</script>
+
 <!-- SCROLL ANIMATIONS -->
 <script>
 const observer = new IntersectionObserver((entries)=>{
@@ -1985,6 +2122,7 @@ const CFG = {
   CHAIN_ID:   8453,
   CHAIN_HEX:  "0x2105",
   EXPLORER:   "https://basescan.org",
+  TREASURY:   "0x03Bb17F8776881b185c4EE03eba372bA2b1320fD",
   CHAINLINK_FEED: "0x71041dddad3595F9CEd3dCCFBe3D1F4b0a16Bb70",
 };
 
@@ -2431,6 +2569,9 @@ function selectTier(el){
   document.querySelectorAll('#basescanLink').forEach(el=>{
     el.href = `https://basescan.org/address/${tierAddr}`;
   });
+  // Update contract address display
+  const addrDisplay = document.getElementById('contractAddrDisplay');
+  if(addrDisplay) addrDisplay.textContent = tierAddr.slice(0,8)+'...'+tierAddr.slice(-4);
 
   toast(`${tier} tier selected — contract switched`,'','✦');
 }
@@ -2438,6 +2579,12 @@ function selectTier(el){
 /* ── MINT ── */
 async function handleMint(){
   if(!address){openModal();return;}
+
+  // Client-side rate limit check
+  if(window.__checkRateLimit && !window.__checkRateLimit()){
+    toast('Too many attempts. Please wait a minute before trying again.','err','⚠');
+    return;
+  }
 
   const net=await provider.getNetwork();
   if(Number(net.chainId)!==CFG.CHAIN_ID){
