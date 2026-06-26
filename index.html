@@ -519,6 +519,8 @@ section{position:relative;z-index:1;}
   display:flex;align-items:center;gap:6px;transition:gap .2s;
 }
 .view-all-link:hover{gap:10px;}
+.gallery-links{display:flex;flex-direction:column;gap:8px;align-items:flex-end;}
+@media(max-width:600px){.gallery-links{align-items:flex-start;}}
 
 .nft-grid{
   display:grid;
@@ -1314,7 +1316,7 @@ section{position:relative;z-index:1;}
         <a href="#mint" class="btn-hero-primary">
           ⚡ Mint Now
         </a>
-        <a id="basescanLink" href="https://basescan.org/address/0x7a01E7d1fae7F8eBf61f7585f8035c0CC948D655" target="_blank" class="btn-hero-secondary">
+        <a id="basescanLink" href="https://basescan.org/address/0x7a01e7d1fae7f8ebf61f7585f8035c0cc948d655" target="_blank" class="btn-hero-secondary">
           View Contract ↗
         </a>
       </div>
@@ -1404,9 +1406,14 @@ section{position:relative;z-index:1;}
         <h2 class="section-title">Gallery Preview</h2>
         <p class="section-sub">Each piece rendered at gallery resolution — 4096×4096px on-chain. Live generative preview below.</p>
       </div>
-      <a id="basescanLink" href="https://basescan.org/address/0x7a01E7d1fae7F8eBf61f7585f8035c0CC948D655" target="_blank" class="view-all-link">
-        View All on BaseScan →
-      </a>
+      <div class="gallery-links">
+        <a id="openseaLink" href="https://opensea.io/assets/base/0x7a01e7d1fae7f8ebf61f7585f8035c0cc948d655" target="_blank" rel="noopener" class="view-all-link">
+          View on OpenSea ↗
+        </a>
+        <a id="basescanLink" href="https://basescan.org/address/0x7a01e7d1fae7f8ebf61f7585f8035c0cc948d655" target="_blank" class="view-all-link">
+          View on BaseScan ↗
+        </a>
+      </div>
     </div>
     <div class="nft-grid" id="nft-gallery-grid"></div>
   </div>
@@ -1662,7 +1669,7 @@ section{position:relative;z-index:1;}
 
         <p class="mc-note">
           Gas fees apply · Payments go to treasury · Base Mainnet ·
-          <a id="basescanLink" href="https://basescan.org/address/0x7a01E7d1fae7F8eBf61f7585f8035c0CC948D655" target="_blank">BaseScan ↗</a>
+          <a id="basescanLink" href="https://basescan.org/address/0x7a01e7d1fae7f8ebf61f7585f8035c0cc948d655" target="_blank">BaseScan ↗</a>
         </p>
       </div>
     </div>
@@ -1804,7 +1811,7 @@ section{position:relative;z-index:1;}
       <div class="cc-item">
         <div class="cc-label">Contract Address</div>
         <div class="cc-value">
-          <a id="basescanLink" href="https://basescan.org/address/0x7a01E7d1fae7F8eBf61f7585f8035c0CC948D655" target="_blank">
+          <a id="basescanLink" href="https://basescan.org/address/0x7a01e7d1fae7f8ebf61f7585f8035c0cc948d655" target="_blank">
             <span id="contractAddrDisplay">0x7a01E7d1...D655</span>
           </a>
         </div>
@@ -1850,7 +1857,7 @@ section{position:relative;z-index:1;}
         <div class="footer-socials">
           <a href="https://x.com/birbxalpha" target="_blank" rel="noopener" class="social-btn" title="Follow @birbxalpha on X">𝕏</a>
           <a href="https://discord.gg/rJapP9Zdc" target="_blank" rel="noopener" class="social-btn" title="Join BIRBX Discord">💬</a>
-          <a id="basescanLink" href="https://basescan.org/address/0x7a01E7d1fae7F8eBf61f7585f8035c0CC948D655" target="_blank" class="social-btn" title="BaseScan">⛓</a>
+          <a id="basescanLink" href="https://basescan.org/address/0x7a01e7d1fae7f8ebf61f7585f8035c0cc948d655" target="_blank" class="social-btn" title="BaseScan">⛓</a>
         </div>
       </div>
       <div class="footer-col">
@@ -1862,7 +1869,7 @@ section{position:relative;z-index:1;}
       </div>
       <div class="footer-col">
         <h4>Resources</h4>
-        <a id="basescanLink" href="https://basescan.org/address/0x7a01E7d1fae7F8eBf61f7585f8035c0CC948D655" target="_blank">Contract</a>
+        <a id="basescanLink" href="https://basescan.org/address/0x7a01e7d1fae7f8ebf61f7585f8035c0cc948d655" target="_blank">Contract</a>
         <a href="https://bridge.base.org" target="_blank">Bridge to Base</a>
         <a href="https://chainlist.org/chain/8453" target="_blank">Add Base to Wallet</a>
         <a href="https://basescan.org" target="_blank">BaseScan</a>
@@ -2110,12 +2117,12 @@ function toggleFaq(btn){
 const CFG = {
   // Contract per tier — all deployed on NFTs2Me on Base Mainnet
   CONTRACTS: {
-    Common:    "0x7a01E7d1fae7F8eBf61f7585f8035c0CC948D655",
+    Common:    "0x7A01e7D1faE7F8eBF61f7585f8035c0CC948D655",
     Rare:      "0xC85f4f718018c15Ee758a460Ec4A946AdF7e8020",
     Epic:      "0x52a0094Fca7A85A1E432BeFfBDE7bc84CC49Eba4",
     Legendary: "0xDA98A127eD0611A40BBA513f83f88B6e8db575Ec",
   },
-  CONTRACT:   "0x7a01E7d1fae7F8eBf61f7585f8035c0CC948D655",
+  CONTRACT:   "0x7A01e7D1faE7F8eBF61f7585f8035c0CC948D655",
   MAX_SUPPLY:    { Common: 6000, Rare: 3000, Epic: 900, Legendary: 100 },
   MAX_PER_WALLET:{ Common: 20,   Rare: 10,   Epic: 5,   Legendary: 2   },
   MAX_PER_TX: 20,
@@ -2564,10 +2571,13 @@ function selectTier(el){
   qty = 1;
   changeQty(0);
 
-  // Update BaseScan links to point to active tier contract
+  // Update BaseScan + OpenSea links to point to active tier contract
   const tierAddr = CFG.CONTRACTS[tier];
   document.querySelectorAll('#basescanLink').forEach(el=>{
     el.href = `https://basescan.org/address/${tierAddr}`;
+  });
+  document.querySelectorAll('#openseaLink').forEach(el=>{
+    el.href = `https://opensea.io/assets/base/${tierAddr}`;
   });
   // Update contract address display
   const addrDisplay = document.getElementById('contractAddrDisplay');
