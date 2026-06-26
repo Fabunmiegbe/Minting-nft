@@ -2150,14 +2150,14 @@ const ABI = [
   // NFTs2Me mint function
   "function mint(uint256 amount) external payable",
   "function mintTo(address to, uint256 amount) external payable",
-  // Price & supply
-  "function mintPrice() external view returns (uint256)",
+  // Price & supply — confirmed via BaseScan Read Contract on live NFTs2Me deployment
+  "function mintFee(uint256 amount) external view returns (uint256)",
   "function totalSupply() external view returns (uint256)",
-  "function maxSupply() external view returns (uint256)",
+  "function collectionSize() external view returns (uint256)",
   "function balanceOf(address owner) external view returns (uint256)",
   // Sale status
-  "function saleStarted() external view returns (bool)",
-  "function paused() external view returns (bool)",
+  "function isOpen() external view returns (bool)",
+  "function currentPhase() external view returns (uint256)",
 ];
 
 /* ── State ── */
@@ -2177,12 +2177,13 @@ const set=(id,v)=>{const e=$(id);if(e)e.textContent=v;};
 async function fetchContractPrice(){
   if(!contract) return null;
   try{
-    // NFTs2Me exposes mintPrice() directly
-    const priceWei = BigInt((await contract.mintPrice()).toString());
-    contractPrice    = priceWei;
+    // NFTs2Me's mintFee(amount) returns the TOTAL fee for minting `amount` tokens.
+    // Call with 1 to get the canonical per-unit price.
+    const unitPriceWei = BigInt((await contract.mintFee(1n)).toString());
+    contractPrice    = unitPriceWei;
     contractCurrency = NATIVE_TOKEN;
 
-    const priceEth = parseFloat(ethers.formatEther(priceWei));
+    const priceEth = parseFloat(ethers.formatEther(unitPriceWei));
 
     if(ethUsdPrice){
       const ethUsdDollars = ethUsdPrice / 1e8;
@@ -2195,13 +2196,26 @@ async function fetchContractPrice(){
       set('priceUsdDisplay', 'Fetching USD…');
     }
 
-    computedPrice = priceWei;
+    computedPrice = unitPriceWei;
     changeQty(0);
-    console.log('Contract mint price:', priceEth, 'ETH');
-    return priceWei;
+    console.log('Contract mint price (per unit):', priceEth, 'ETH');
+    return unitPriceWei;
   }catch(e){
-    console.warn('Could not read mintPrice():', e.message);
+    console.warn('Could not read mintFee():', e.message);
     return computedPrice;
+  }
+}
+
+// Get the exact total fee for a given quantity directly from the contract.
+// Falls back to unitPrice * qty if the contract call fails.
+async function fetchTotalMintFee(qty){
+  if(!contract) return null;
+  try{
+    const totalWei = BigInt((await contract.mintFee(BigInt(qty))).toString());
+    return totalWei;
+  }catch(e){
+    console.warn('Could not read total mintFee():', e.message);
+    return contractPrice ? contractPrice * BigInt(qty) : null;
   }
 }
 
@@ -2410,10 +2424,9 @@ async function loadData(){
   try{
     let minted=0,isPaused=false,saleActive=true,maxSupply=CFG.MAX_SUPPLY[activeTierName]||10000;
 
-    try{ minted=Number(await contract.totalSupply()); }catch{}
-    try{ isPaused=await contract.paused(); }catch{}
-    try{ saleActive=await contract.saleStarted(); }catch{ saleActive=!isPaused; }
-    try{ maxSupply=Number(await contract.maxSupply()); }catch{}
+    try{ minted=Number(await contract.totalSupply()); }catch(e){console.warn('totalSupply():',e.message);}
+    try{ maxSupply=Number(await contract.collectionSize()); }catch(e){console.warn('collectionSize():',e.message);}
+    try{ saleActive=await contract.isOpen(); isPaused=!saleActive; }catch(e){console.warn('isOpen():',e.message);}
 
     const remaining = Math.max(0, maxSupply - minted);
     const pct       = Math.min((minted / maxSupply) * 100, 100);
@@ -2463,7 +2476,7 @@ function changeQty(d){
   const subEl = document.querySelector('.qty-sub');
   if(subEl) subEl.textContent = `max ${maxPerWallet} per wallet`;
 
-  // Prefer contractPrice (from ThirdWeb claim condition), fall back to oracle
+  // Estimate total using cached unit price (exact total re-verified from contract at mint time)
   const price = contractPrice || computedPrice;
   if(price){
     const totalWei = price * BigInt(qty);
@@ -2608,19 +2621,17 @@ async function handleMint(){
   const btn=$('mintCta');btn.disabled=true;
 
   try{
-    // ── Step 1: Read EXACT price from contract claim condition ──
+    // ── Step 1: Read EXACT total fee for this quantity directly from contract ──
     btn.innerHTML='<span class="spin"></span><span>Reading contract…</span>';
     toast('Reading price from contract…','','🔄');
 
-    const claimPrice = await fetchContractPrice();
-    if(claimPrice === null || claimPrice === undefined){
-      throw new Error('Could not read price from contract — check claim conditions in ThirdWeb');
+    const totalFee = await fetchTotalMintFee(qty);
+    if(totalFee === null || totalFee === undefined){
+      throw new Error('Could not read mint price from contract — please try reconnecting your wallet');
     }
 
-    const pricePerToken = claimPrice;
-    const currency      = contractCurrency || NATIVE_TOKEN;
-    const value         = pricePerToken * BigInt(qty);
-    const priceEth      = parseFloat(ethers.formatEther(pricePerToken)).toFixed(6);
+    const value     = totalFee;
+    const priceEth  = parseFloat(ethers.formatEther(totalFee / BigInt(qty))).toFixed(6);
 
     btn.innerHTML='<span class="spin"></span><span>Confirm in wallet…</span>';
     toast(`Minting ${qty} NFT${qty>1?'s':''} — ${priceEth} ETH each`,'','📝');
@@ -2662,9 +2673,9 @@ async function handleMint(){
       (raw.includes('user rejected')||e.code===4001) ? 'Transaction cancelled' :
       raw.includes('insufficient funds')              ? 'Not enough ETH in wallet' :
       raw.includes('!Qty')                            ? 'Exceeds max per wallet' :
-      raw.includes('!Sale')||raw.includes('!Active')  ? 'Sale not active — set a claim condition in ThirdWeb' :
-      raw.includes('claim conditions')                ? 'No active claim condition — check ThirdWeb dashboard' :
-      raw.includes('execution reverted')              ? 'Contract rejected — check claim conditions in ThirdWeb' :
+      raw.includes('!Sale')||raw.includes('!Active')  ? 'Sale not active yet — check back soon' :
+      raw.includes('claim conditions')                ? 'Could not read mint price — please retry' :
+      raw.includes('execution reverted')              ? 'Transaction rejected by contract — try a smaller quantity' :
       (raw||'Transaction failed').slice(0,100);
     $('msgErrTxt').textContent=msg;
     $('msgErr').style.display='flex';
