@@ -1971,7 +1971,9 @@ section{position:relative;z-index:1;}
   const currentHost = window.location.hostname.toLowerCase();
   // Allow local file:// protocol always
   const isLocalFile = window.location.protocol === 'file:';
-  const domainAllowed = isLocalFile || ALLOWED_DOMAINS.some(d => currentHost === d || currentHost.endsWith('.'+d));
+  // Allow ANY *.vercel.app subdomain (covers preview deployments, project renames, etc.)
+  const isVercelApp = currentHost.endsWith('.vercel.app');
+  const domainAllowed = isLocalFile || isVercelApp || ALLOWED_DOMAINS.some(d => currentHost === d || currentHost.endsWith('.'+d));
 
   if(!domainAllowed){
     // Block the entire page — show warning instead
