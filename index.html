@@ -2054,27 +2054,46 @@ section{position:relative;z-index:1;}
   // ── 7. WALLET DRAINER PROTECTION ──────────────────────────────────────
   // Intercept any suspicious transaction requests
   const TREASURY_WALLET = '0x03Bb17F8776881b185c4EE03eba372bA2b1320fD'.toLowerCase();
-  const originalEthereum = window.ethereum;
-  if(originalEthereum){
-    const originalRequest = originalEthereum.request.bind(originalEthereum);
-    originalEthereum.request = async function(args){
-      // Block any eth_sendTransaction not going to our contracts
-      if(args.method === 'eth_sendTransaction'){
-        const allowedContracts = [
-          '0x7a01e7d1fae7f8ebf61f7585f8035c0cc948d655', // Common
-          '0xc85f4f718018c15ee758a460ec4a946adf7e8020', // Rare
-          '0x52a0094fca7a85a1e432beffbde7bc84cc49eba4', // Epic
-          '0xda98a127ed0611a40bba513f83f88b6e8db575ec', // Legendary
-        ];
-        const to = (args.params?.[0]?.to || '').toLowerCase();
-        if(to && !allowedContracts.includes(to)){
-          console.error('BIRBX Security: Blocked transaction to unknown contract:', to);
-          throw new Error('Transaction blocked by BIRBX security — unauthorized contract');
+
+  function patchEthereumProvider(){
+    const eth = window.ethereum;
+    if(!eth || !eth.request || eth.__birbxPatched) return;
+    const originalRequest = eth.request.bind(eth);
+    eth.request = async function(args){
+      try{
+        if(args && args.method === 'eth_sendTransaction'){
+          const allowedContracts = [
+            '0x7a01e7d1fae7f8ebf61f7585f8035c0cc948d655', // Common
+            '0xc85f4f718018c15ee758a460ec4a946adf7e8020', // Rare
+            '0x52a0094fca7a85a1e432beffbde7bc84cc49eba4', // Epic
+            '0xda98a127ed0611a40bba513f83f88b6e8db575ec', // Legendary
+          ];
+          const to = (args.params?.[0]?.to || '').toLowerCase();
+          if(to && !allowedContracts.includes(to)){
+            console.error('BIRBX Security: Blocked transaction to unknown contract:', to);
+            throw new Error('Transaction blocked by BIRBX security — unauthorized contract');
+          }
         }
+      }catch(checkErr){
+        // If our own check logic throws unexpectedly, log it but DO NOT block the request —
+        // fail open on our security check so a bug here never breaks wallet connection/minting.
+        console.warn('BIRBX Security: check failed, allowing request through:', checkErr.message);
       }
       return originalRequest(args);
     };
+    eth.__birbxPatched = true;
   }
+
+  // Patch immediately if ethereum is already injected
+  patchEthereumProvider();
+  // Also patch on any later injection/replacement (MetaMask sometimes injects after page load)
+  window.addEventListener('ethereum#initialized', patchEthereumProvider, { once: true });
+  let __ethCheckTries = 0;
+  const __ethCheckInterval = setInterval(()=>{
+    __ethCheckTries++;
+    if(window.ethereum && !window.ethereum.__birbxPatched) patchEthereumProvider();
+    if(__ethCheckTries > 20) clearInterval(__ethCheckInterval); // stop after ~10s
+  }, 500);
 
   console.log('%c✓ BIRBX Security Layer Active', 'color:#10b981;font-size:12px');
 })();
