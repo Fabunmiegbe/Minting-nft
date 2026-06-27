@@ -2179,7 +2179,20 @@ async function fetchContractPrice(){
   try{
     // NFTs2Me's mintFee(amount) returns the TOTAL fee for minting `amount` tokens.
     // Call with 1 to get the canonical per-unit price.
-    const unitPriceWei = BigInt((await contract.mintFee(1n)).toString());
+    // Try multiple argument encodings for compatibility across NFTs2Me contract versions.
+    let unitPriceWei;
+    try{
+      unitPriceWei = BigInt((await contract.mintFee(1n)).toString());
+    }catch(e1){
+      console.warn('mintFee(1n) failed, retrying with mintFee(1):', e1.message);
+      try{
+        unitPriceWei = BigInt((await contract.mintFee(1)).toString());
+      }catch(e2){
+        console.warn('mintFee(1) failed, retrying with explicit BigNumber-style call:', e2.message);
+        // Final fallback: call via staticCall with explicit overrides
+        unitPriceWei = BigInt((await contract.mintFee.staticCall(1)).toString());
+      }
+    }
     contractPrice    = unitPriceWei;
     contractCurrency = NATIVE_TOKEN;
 
@@ -2198,10 +2211,10 @@ async function fetchContractPrice(){
 
     computedPrice = unitPriceWei;
     changeQty(0);
-    console.log('Contract mint price (per unit):', priceEth, 'ETH');
+    console.log('Contract mint price (per unit):', priceEth, 'ETH — contract:', contract.target || contract.address);
     return unitPriceWei;
   }catch(e){
-    console.warn('Could not read mintFee():', e.message);
+    console.error('Could not read mintFee() after all fallbacks — contract:', contract.target || contract.address, 'error:', e.message, e);
     return computedPrice;
   }
 }
